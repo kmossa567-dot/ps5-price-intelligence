@@ -5,8 +5,6 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>PS5 Store | AI Price Tracker & Deals</title>
   <script src="https://cdn.tailwindcss.com"></script>
-  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
   <style>
     body { font-family: 'Inter', sans-serif; background: #0a0e1a; }
@@ -14,29 +12,16 @@
     .game-card:hover { transform: translateY(-4px); }
     .game-card:hover .cover-img { transform: scale(1.05); }
     .cover-img { transition: transform 0.5s ease; }
-    .skeleton { 
-      background: linear-gradient(90deg, #1e293b 25%, #334155 50%, #1e293b 75%); 
-      background-size: 200% 100%; 
-      animation: shimmer 1.5s infinite; 
-    }
+    .skeleton { background: linear-gradient(90deg, #1e293b 25%, #334155 50%, #1e293b 75%); background-size: 200% 100%; animation: shimmer 1.5s infinite; }
     @keyframes shimmer { 0% { background-position: 200% 0; } 100% { background-position: -200% 0; } }
-    .discount-badge { 
-      background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
-      box-shadow: 0 4px 12px rgba(239, 68, 68, 0.4);
-    }
-    .ai-predict-bar {
-      background: linear-gradient(90deg, #3b82f6 0%, #8b5cf6 100%);
-    }
-    .sidebar-link.active {
-      background: rgba(59, 130, 246, 0.15);
-      border-color: rgba(59, 130, 246, 0.4);
-      color: #93bbfc;
-    }
-    /* Scrollbar styling */
+    .discount-badge { background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%); box-shadow: 0 4px 12px rgba(239, 68, 68, 0.4); }
+    .ai-predict-bar { background: linear-gradient(90deg, #3b82f6 0%, #8b5cf6 100%); }
+    .sidebar-link.active { background: rgba(59, 130, 246, 0.15); border-color: rgba(59, 130, 246, 0.4); color: #93bbfc; }
     ::-webkit-scrollbar { width: 8px; }
     ::-webkit-scrollbar-track { background: #0f172a; }
     ::-webkit-scrollbar-thumb { background: #334155; border-radius: 4px; }
-    ::-webkit-scrollbar-thumb:hover { background: #475569; }
+    .search-overlay { opacity: 0; visibility: hidden; transition: all 0.3s ease; }
+    .search-overlay.active { opacity: 1; visibility: visible; }
   </style>
 <base target="_blank">
 </head>
@@ -54,13 +39,9 @@
       </div>
       <div class="flex items-center gap-3">
         <div class="hidden md:flex items-center gap-2 px-3 py-1.5 bg-green-500/10 text-green-400 rounded-full text-xs border border-green-500/20">
-          <span class="w-1.5 h-1.5 bg-green-400 rounded-full animate-pulse"></span>
-          Live Deals
+          <span class="w-1.5 h-1.5 bg-green-400 rounded-full animate-pulse"></span> Live
         </div>
-        <button onclick="document.getElementById('search-modal').classList.remove('hidden')" 
-          class="px-4 py-2 bg-blue-600 hover:bg-blue-500 text-white text-sm font-medium rounded-lg transition shadow-lg shadow-blue-600/20">
-          🔍 Search
-        </button>
+        <button onclick="openSearch()" class="px-4 py-2 bg-blue-600 hover:bg-blue-500 text-white text-sm font-medium rounded-lg transition shadow-lg shadow-blue-600/20">🔍 Search</button>
       </div>
     </div>
   </nav>
@@ -71,11 +52,9 @@
     <aside class="lg:w-56 shrink-0">
       <div class="bg-[#111827] border border-slate-800 rounded-2xl p-4 sticky top-20">
         <h3 class="text-xs font-bold text-slate-400 uppercase tracking-wider mb-4">Browse</h3>
-
         <nav class="space-y-1" id="sidebar-nav">
           <a href="#" data-filter="sale" class="sidebar-link active flex items-center gap-3 px-3 py-2.5 rounded-xl border text-sm font-medium transition">
-            <span>🏷️</span> On Sale
-            <span class="ml-auto text-xs bg-blue-500/30 px-2 py-0.5 rounded-full" id="sale-count">0</span>
+            <span>🏷️</span> On Sale <span class="ml-auto text-xs bg-blue-500/30 px-2 py-0.5 rounded-full" id="sale-count">0</span>
           </a>
           <a href="#" data-filter="trending" class="sidebar-link flex items-center gap-3 px-3 py-2.5 text-slate-400 hover:text-white hover:bg-slate-800/50 rounded-xl border border-transparent text-sm transition">
             <span>🔥</span> Trending
@@ -95,16 +74,16 @@
           <h3 class="text-xs font-bold text-slate-400 uppercase tracking-wider mb-4">Price Range</h3>
           <div class="space-y-2" id="price-filters">
             <label class="flex items-center gap-2 text-sm text-slate-400 cursor-pointer hover:text-white transition">
-              <input type="checkbox" value="under20" class="price-filter rounded border-slate-600 bg-slate-800 text-blue-500 focus:ring-blue-500"> Under $20
+              <input type="checkbox" value="under20" class="price-filter rounded border-slate-600 bg-slate-800 text-blue-500"> Under $20
             </label>
             <label class="flex items-center gap-2 text-sm text-slate-400 cursor-pointer hover:text-white transition">
-              <input type="checkbox" value="20to40" class="price-filter rounded border-slate-600 bg-slate-800 text-blue-500 focus:ring-blue-500"> $20 - $40
+              <input type="checkbox" value="20to40" class="price-filter rounded border-slate-600 bg-slate-800 text-blue-500"> $20 - $40
             </label>
             <label class="flex items-center gap-2 text-sm text-slate-400 cursor-pointer hover:text-white transition">
-              <input type="checkbox" value="40to60" class="price-filter rounded border-slate-600 bg-slate-800 text-blue-500 focus:ring-blue-500"> $40 - $60
+              <input type="checkbox" value="40to60" class="price-filter rounded border-slate-600 bg-slate-800 text-blue-500"> $40 - $60
             </label>
             <label class="flex items-center gap-2 text-sm text-slate-400 cursor-pointer hover:text-white transition">
-              <input type="checkbox" value="60plus" class="price-filter rounded border-slate-600 bg-slate-800 text-blue-500 focus:ring-blue-500"> $60+
+              <input type="checkbox" value="60plus" class="price-filter rounded border-slate-600 bg-slate-800 text-blue-500"> $60+
             </label>
           </div>
         </div>
@@ -128,9 +107,6 @@
 
       <!-- AI Hero Banner -->
       <div class="relative bg-gradient-to-r from-indigo-900/50 to-purple-900/30 border border-indigo-500/20 rounded-2xl p-6 mb-6 overflow-hidden">
-        <div class="absolute top-0 right-0 w-64 h-full opacity-10">
-          <svg viewBox="0 0 200 200" class="w-full h-full"><circle cx="100" cy="100" r="80" fill="none" stroke="white" stroke-width="2"/><circle cx="100" cy="100" r="60" fill="none" stroke="white" stroke-width="1"/><circle cx="100" cy="100" r="40" fill="none" stroke="white" stroke-width="1"/></svg>
-        </div>
         <div class="relative z-10 flex flex-col md:flex-row items-center gap-6">
           <div class="w-20 h-20 md:w-24 md:h-24 bg-gradient-to-br from-blue-500 to-purple-600 rounded-2xl flex items-center justify-center text-3xl md:text-4xl shadow-2xl shrink-0">🤖</div>
           <div class="flex-1 text-center md:text-left">
@@ -152,10 +128,6 @@
         <div class="flex items-center gap-3">
           <h2 class="text-xl font-bold" id="section-title">🔥 Deals of the Week</h2>
           <span class="px-2 py-1 bg-red-500/10 text-red-400 text-xs rounded-lg border border-red-500/20 font-medium">Ends in 3 days</span>
-        </div>
-        <div class="flex gap-2">
-          <button onclick="changeView('grid')" class="p-2 bg-slate-800 rounded-lg hover:bg-slate-700 transition text-xs">⊞ Grid</button>
-          <button onclick="changeView('list')" class="p-2 bg-slate-800 rounded-lg hover:bg-slate-700 transition text-xs">☰ List</button>
         </div>
       </div>
 
@@ -182,18 +154,13 @@
         <div class="text-center max-w-xl mx-auto">
           <h3 class="text-2xl font-bold mb-2">🔔 Never Miss a Price Drop</h3>
           <p class="text-slate-400 mb-6">Get instant alerts when your favorite PS5 games drop below your target price.</p>
-
           <form id="alert-form" class="flex flex-col sm:flex-row gap-3">
-            <input type="email" id="alert-email" placeholder="your@email.com" required
-              class="flex-1 px-4 py-3 bg-slate-900 border border-slate-600 rounded-xl text-white placeholder-slate-500 focus:outline-none focus:border-blue-500">
+            <input type="email" id="alert-email" placeholder="your@email.com" required class="flex-1 px-4 py-3 bg-slate-900 border border-slate-600 rounded-xl text-white placeholder-slate-500 focus:outline-none focus:border-blue-500">
             <select id="alert-game" class="px-4 py-3 bg-slate-900 border border-slate-600 rounded-xl text-white focus:outline-none focus:border-blue-500">
               <option value="">Select Game</option>
             </select>
-            <input type="number" id="alert-price" placeholder="Target $" required
-              class="w-28 px-4 py-3 bg-slate-900 border border-slate-600 rounded-xl text-white placeholder-slate-500 focus:outline-none focus:border-blue-500">
-            <button type="submit" class="px-6 py-3 bg-blue-500 hover:bg-blue-600 text-white font-semibold rounded-xl transition">
-              Set Alert
-            </button>
+            <input type="number" id="alert-price" placeholder="Target $" required class="w-28 px-4 py-3 bg-slate-900 border border-slate-600 rounded-xl text-white placeholder-slate-500 focus:outline-none focus:border-blue-500">
+            <button type="submit" class="px-6 py-3 bg-blue-500 hover:bg-blue-600 text-white font-semibold rounded-xl transition">Set Alert</button>
           </form>
           <p id="alert-message" class="mt-3 text-sm hidden"></p>
         </div>
@@ -207,238 +174,47 @@
     <p class="mt-1 text-xs">Prices updated every 15 minutes • Real-time deal tracking</p>
   </footer>
 
-  <!-- Search Modal -->
-  <div id="search-modal" class="hidden fixed inset-0 bg-black/80 backdrop-blur-sm z-50 flex items-start justify-center pt-20">
-    <div class="bg-[#111827] border border-slate-700 rounded-2xl w-full max-w-lg mx-4 p-4">
-      <div class="flex items-center gap-3 mb-4">
-        <span class="text-xl">🔍</span>
-        <input type="text" id="search-input" placeholder="Search PS5 games..." 
-          class="flex-1 bg-transparent text-white text-lg outline-none placeholder-slate-500">
-        <button onclick="document.getElementById('search-modal').classList.add('hidden')" class="text-slate-400 hover:text-white">✕</button>
+  <!-- Search Overlay -->
+  <div id="search-overlay" class="search-overlay fixed inset-0 bg-black/90 backdrop-blur-md z-50 flex items-start justify-center pt-24">
+    <div class="w-full max-w-2xl mx-4">
+      <div class="bg-[#1e293b] border border-slate-700 rounded-2xl p-4 shadow-2xl">
+        <div class="flex items-center gap-3 mb-4">
+          <span class="text-2xl">🔍</span>
+          <input type="text" id="search-input" placeholder="Search PS5 games..." class="flex-1 bg-transparent text-white text-xl outline-none placeholder-slate-500" autocomplete="off">
+          <button onclick="closeSearch()" class="text-slate-400 hover:text-white text-xl px-2">✕</button>
+        </div>
+        <div id="search-results" class="max-h-80 overflow-y-auto space-y-1"></div>
       </div>
-      <div id="search-results" class="max-h-64 overflow-y-auto space-y-2"></div>
     </div>
   </div>
 
   <script>
     // ============================================
-    // GAME DATA - Real PS5 Games with IGDB Covers
+    // GAME DATA - 16 PS5 Games
     // ============================================
     const games = [
-      {
-        id: 1,
-        name: "Marvel's Spider-Man 2",
-        genre: "Action",
-        rating: 4.9,
-        current_price: 49.99,
-        original_price: 69.99,
-        discount: 29,
-        in_stock: true,
-        stock_level: "high",
-        image: "https://images.igdb.com/igdb/image/upload/t_cover_big/co5ziw.jpg",
-        ai_predicted: 39.99,
-        ai_confidence: 85,
-        ai_days: 7,
-        category: "sale",
-        deal_url: "https://www.playstation.com/en-us/games/marvels-spider-man-2/"
-      },
-      {
-        id: 2,
-        name: "God of War Ragnarök",
-        genre: "Action",
-        rating: 4.8,
-        current_price: 39.99,
-        original_price: 59.99,
-        discount: 33,
-        in_stock: true,
-        stock_level: "high",
-        image: "https://images.igdb.com/igdb/image/upload/t_cover_big/co5s5v.jpg",
-        ai_predicted: 29.99,
-        ai_confidence: 78,
-        ai_days: 14,
-        category: "sale",
-        deal_url: "https://www.playstation.com/en-us/games/god-of-war-ragnarok/"
-      },
-      {
-        id: 3,
-        name: "The Last of Us Part I",
-        genre: "Adventure",
-        rating: 4.7,
-        current_price: 49.99,
-        original_price: 69.99,
-        discount: 28,
-        in_stock: true,
-        stock_level: "medium",
-        image: "https://images.igdb.com/igdb/image/upload/t_cover_big/co6bo0.jpg",
-        ai_predicted: 39.99,
-        ai_confidence: 82,
-        ai_days: 10,
-        category: "sale",
-        deal_url: "https://www.playstation.com/en-us/games/the-last-of-us-part-i/"
-      },
-      {
-        id: 4,
-        name: "EA Sports FC 25",
-        genre: "Sports",
-        rating: 4.2,
-        current_price: 49.99,
-        original_price: 59.99,
-        discount: 17,
-        in_stock: true,
-        stock_level: "low",
-        image: "https://images.igdb.com/igdb/image/upload/t_cover_big/co6kqt.jpg",
-        ai_predicted: 34.99,
-        ai_confidence: 65,
-        ai_days: 30,
-        category: "sale",
-        deal_url: "https://www.ea.com/games/ea-sports-fc/fc-25"
-      },
-      {
-        id: 5,
-        name: "Black Myth: Wukong",
-        genre: "Action",
-        rating: 4.6,
-        current_price: 59.99,
-        original_price: 59.99,
-        discount: 0,
-        in_stock: true,
-        stock_level: "high",
-        image: "https://images.igdb.com/igdb/image/upload/t_cover_big/co6m7l.jpg",
-        ai_predicted: 49.99,
-        ai_confidence: 72,
-        ai_days: 21,
-        category: "trending",
-        deal_url: "https://www.playstation.com/en-us/games/black-myth-wukong/"
-      },
-      {
-        id: 6,
-        name: "Astro Bot",
-        genre: "Adventure",
-        rating: 4.9,
-        current_price: 59.99,
-        original_price: 59.99,
-        discount: 0,
-        in_stock: true,
-        stock_level: "high",
-        image: "https://images.igdb.com/igdb/image/upload/t_cover_big/co6k5e.jpg",
-        ai_predicted: 44.99,
-        ai_confidence: 68,
-        ai_days: 25,
-        category: "new",
-        deal_url: "https://www.playstation.com/en-us/games/astro-bot/"
-      },
-      {
-        id: 7,
-        name: "Stellar Blade",
-        genre: "Action",
-        rating: 4.5,
-        current_price: 69.99,
-        original_price: 69.99,
-        discount: 0,
-        in_stock: true,
-        stock_level: "medium",
-        image: "https://images.igdb.com/igdb/image/upload/t_cover_big/co6k4e.jpg",
-        ai_predicted: 54.99,
-        ai_confidence: 70,
-        ai_days: 18,
-        category: "trending",
-        deal_url: "https://www.playstation.com/en-us/games/stellar-blade/"
-      },
-      {
-        id: 8,
-        name: "Final Fantasy VII Rebirth",
-        genre: "RPG",
-        rating: 4.8,
-        current_price: 55.99,
-        original_price: 69.99,
-        discount: 20,
-        in_stock: true,
-        stock_level: "high",
-        image: "https://images.igdb.com/igdb/image/upload/t_cover_big/co6k3e.jpg",
-        ai_predicted: 44.99,
-        ai_confidence: 75,
-        ai_days: 12,
-        category: "sale",
-        deal_url: "https://www.playstation.com/en-us/games/final-fantasy-vii-rebirth/"
-      },
-      {
-        id: 9,
-        name: "Horizon Forbidden West",
-        genre: "Adventure",
-        rating: 4.7,
-        current_price: 29.99,
-        original_price: 59.99,
-        discount: 50,
-        in_stock: true,
-        stock_level: "high",
-        image: "https://images.igdb.com/igdb/image/upload/t_cover_big/co5pwb.jpg",
-        ai_predicted: 24.99,
-        ai_confidence: 60,
-        ai_days: 30,
-        category: "sale",
-        deal_url: "https://www.playstation.com/en-us/games/horizon-forbidden-west/"
-      },
-      {
-        id: 10,
-        name: "Gran Turismo 7",
-        genre: "Racing",
-        rating: 4.4,
-        current_price: 39.99,
-        original_price: 59.99,
-        discount: 33,
-        in_stock: true,
-        stock_level: "medium",
-        image: "https://images.igdb.com/igdb/image/upload/t_cover_big/co5p7d.jpg",
-        ai_predicted: 29.99,
-        ai_confidence: 80,
-        ai_days: 14,
-        category: "sale",
-        deal_url: "https://www.playstation.com/en-us/games/gran-turismo-7/"
-      },
-      {
-        id: 11,
-        name: "Demon's Souls",
-        genre: "RPG",
-        rating: 4.6,
-        current_price: 49.99,
-        original_price: 69.99,
-        discount: 29,
-        in_stock: false,
-        stock_level: "out",
-        image: "https://images.igdb.com/igdb/image/upload/t_cover_big/co5p6e.jpg",
-        ai_predicted: 39.99,
-        ai_confidence: 77,
-        ai_days: 10,
-        category: "rated",
-        deal_url: "https://www.playstation.com/en-us/games/demons-souls/"
-      },
-      {
-        id: 12,
-        name: "Ratchet & Clank: Rift Apart",
-        genre: "Action",
-        rating: 4.7,
-        current_price: 34.99,
-        original_price: 69.99,
-        discount: 50,
-        in_stock: true,
-        stock_level: "low",
-        image: "https://images.igdb.com/igdb/image/upload/t_cover_big/co5p8d.jpg",
-        ai_predicted: 29.99,
-        ai_confidence: 83,
-        ai_days: 7,
-        category: "sale",
-        deal_url: "https://www.playstation.com/en-us/games/ratchet-and-clank-rift-apart/"
-      }
+      { id: 1, name: "Marvel's Spider-Man 2", genre: "Action", rating: 4.9, current_price: 49.99, original_price: 69.99, discount: 29, in_stock: true, stock_level: "high", image: "https://upload.wikimedia.org/wikipedia/en/0/0f/Spider-Man_2_cover.jpg", ai_predicted: 39.99, ai_confidence: 85, ai_days: 7, category: "sale", deal_url: "https://www.playstation.com/en-us/games/marvels-spider-man-2/" },
+      { id: 2, name: "God of War Ragnarök", genre: "Action", rating: 4.8, current_price: 39.99, original_price: 59.99, discount: 33, in_stock: true, stock_level: "high", image: "https://upload.wikimedia.org/wikipedia/en/e/ee/God_of_War_Ragnar%C3%B6k_cover.jpg", ai_predicted: 29.99, ai_confidence: 78, ai_days: 14, category: "sale", deal_url: "https://www.playstation.com/en-us/games/god-of-war-ragnarok/" },
+      { id: 3, name: "The Last of Us Part I", genre: "Adventure", rating: 4.7, current_price: 49.99, original_price: 69.99, discount: 28, in_stock: true, stock_level: "medium", image: "https://upload.wikimedia.org/wikipedia/en/e/e1/The_Last_of_Us_Part_I_cover.jpg", ai_predicted: 39.99, ai_confidence: 82, ai_days: 10, category: "sale", deal_url: "https://www.playstation.com/en-us/games/the-last-of-us-part-i/" },
+      { id: 4, name: "EA Sports FC 25", genre: "Sports", rating: 4.2, current_price: 49.99, original_price: 59.99, discount: 17, in_stock: true, stock_level: "low", image: "https://upload.wikimedia.org/wikipedia/en/4/4e/EA_Sports_FC_25_cover.jpg", ai_predicted: 34.99, ai_confidence: 65, ai_days: 30, category: "sale", deal_url: "https://www.ea.com/games/ea-sports-fc/fc-25" },
+      { id: 5, name: "Black Myth: Wukong", genre: "Action", rating: 4.6, current_price: 59.99, original_price: 59.99, discount: 0, in_stock: true, stock_level: "high", image: "https://upload.wikimedia.org/wikipedia/en/a/a6/Black_Myth_Wukong_cover_art.jpg", ai_predicted: 49.99, ai_confidence: 72, ai_days: 21, category: "trending", deal_url: "https://www.playstation.com/en-us/games/black-myth-wukong/" },
+      { id: 6, name: "Astro Bot", genre: "Adventure", rating: 4.9, current_price: 59.99, original_price: 59.99, discount: 0, in_stock: true, stock_level: "high", image: "https://upload.wikimedia.org/wikipedia/en/1/1d/Astro_Bot_cover_art.jpg", ai_predicted: 44.99, ai_confidence: 68, ai_days: 25, category: "new", deal_url: "https://www.playstation.com/en-us/games/astro-bot/" },
+      { id: 7, name: "Stellar Blade", genre: "Action", rating: 4.5, current_price: 69.99, original_price: 69.99, discount: 0, in_stock: true, stock_level: "medium", image: "https://upload.wikimedia.org/wikipedia/en/4/4c/Stellar_Blade_cover.jpg", ai_predicted: 54.99, ai_confidence: 70, ai_days: 18, category: "trending", deal_url: "https://www.playstation.com/en-us/games/stellar-blade/" },
+      { id: 8, name: "Final Fantasy VII Rebirth", genre: "RPG", rating: 4.8, current_price: 55.99, original_price: 69.99, discount: 20, in_stock: true, stock_level: "high", image: "https://upload.wikimedia.org/wikipedia/en/6/6c/Final_Fantasy_VII_Rebirth_cover.jpg", ai_predicted: 44.99, ai_confidence: 75, ai_days: 12, category: "sale", deal_url: "https://www.playstation.com/en-us/games/final-fantasy-vii-rebirth/" },
+      { id: 9, name: "Horizon Forbidden West", genre: "Adventure", rating: 4.7, current_price: 29.99, original_price: 59.99, discount: 50, in_stock: true, stock_level: "high", image: "https://upload.wikimedia.org/wikipedia/en/6/69/Horizon_Forbidden_West_cover.jpg", ai_predicted: 24.99, ai_confidence: 60, ai_days: 30, category: "sale", deal_url: "https://www.playstation.com/en-us/games/horizon-forbidden-west/" },
+      { id: 10, name: "Gran Turismo 7", genre: "Racing", rating: 4.4, current_price: 39.99, original_price: 59.99, discount: 33, in_stock: true, stock_level: "medium", image: "https://upload.wikimedia.org/wikipedia/en/1/14/Gran_Turismo_7_cover.jpg", ai_predicted: 29.99, ai_confidence: 80, ai_days: 14, category: "sale", deal_url: "https://www.playstation.com/en-us/games/gran-turismo-7/" },
+      { id: 11, name: "Demon's Souls", genre: "RPG", rating: 4.6, current_price: 49.99, original_price: 69.99, discount: 29, in_stock: false, stock_level: "out", image: "https://upload.wikimedia.org/wikipedia/en/9/9f/Demon%27s_Souls_Remake_cover.jpg", ai_predicted: 39.99, ai_confidence: 77, ai_days: 10, category: "rated", deal_url: "https://www.playstation.com/en-us/games/demons-souls/" },
+      { id: 12, name: "Ratchet & Clank: Rift Apart", genre: "Action", rating: 4.7, current_price: 34.99, original_price: 69.99, discount: 50, in_stock: true, stock_level: "low", image: "https://upload.wikimedia.org/wikipedia/en/7/7c/Ratchet_%26_Clank_-_Rift_Apart_cover.jpg", ai_predicted: 29.99, ai_confidence: 83, ai_days: 7, category: "sale", deal_url: "https://www.playstation.com/en-us/games/ratchet-and-clank-rift-apart/" },
+      { id: 13, name: "Ghost of Tsushima", genre: "Action", rating: 4.8, current_price: 29.99, original_price: 59.99, discount: 50, in_stock: true, stock_level: "high", image: "https://upload.wikimedia.org/wikipedia/en/a/a7/Ghost_of_Tsushima.jpg", ai_predicted: 24.99, ai_confidence: 74, ai_days: 20, category: "sale", deal_url: "https://www.playstation.com/en-us/games/ghost-of-tsushima/" },
+      { id: 14, name: "Returnal", genre: "Action", rating: 4.5, current_price: 39.99, original_price: 69.99, discount: 43, in_stock: true, stock_level: "medium", image: "https://upload.wikimedia.org/wikipedia/en/6/6e/Returnal_cover.jpg", ai_predicted: 29.99, ai_confidence: 79, ai_days: 15, category: "sale", deal_url: "https://www.playstation.com/en-us/games/returnal/" },
+      { id: 15, name: "Death Stranding 2", genre: "Adventure", rating: 4.7, current_price: 69.99, original_price: 69.99, discount: 0, in_stock: true, stock_level: "high", image: "https://upload.wikimedia.org/wikipedia/en/9/9f/Death_Stranding_2_cover.jpg", ai_predicted: 59.99, ai_confidence: 55, ai_days: 60, category: "new", deal_url: "https://www.playstation.com/en-us/games/death-stranding-2/" },
+      { id: 16, name: "Silent Hill 2 Remake", genre: "Horror", rating: 4.8, current_price: 59.99, original_price: 59.99, discount: 0, in_stock: true, stock_level: "high", image: "https://upload.wikimedia.org/wikipedia/en/8/8f/Silent_Hill_2_2024_cover.jpg", ai_predicted: 44.99, ai_confidence: 66, ai_days: 45, category: "trending", deal_url: "https://www.playstation.com/en-us/games/silent-hill-2/" }
     ];
 
     let currentFilter = 'sale';
-    let currentView = 'grid';
     let selectedGenres = new Set();
     let priceRanges = [];
 
-    // ============================================
-    // RENDER GAMES
-    // ============================================
     function renderGames(filteredGames = null) {
       const loadingDiv = document.getElementById('games-loading');
       const gridDiv = document.getElementById('games-grid');
@@ -456,14 +232,7 @@
 
       emptyDiv.classList.add('hidden');
       gridDiv.classList.remove('hidden');
-
-      if (currentView === 'list') {
-        gridDiv.className = 'hidden';
-        // List view logic here if needed
-        gridDiv.className = 'grid grid-cols-1 gap-4';
-      } else {
-        gridDiv.className = 'grid grid-cols-2 md:grid-cols-3 xl:grid-cols-4 gap-4';
-      }
+      gridDiv.className = 'grid grid-cols-2 md:grid-cols-3 xl:grid-cols-4 gap-4';
 
       gridDiv.innerHTML = displayGames.map(game => {
         const stockBadge = game.in_stock 
@@ -475,45 +244,27 @@
           : '';
 
         const aiSection = game.ai_predicted < game.current_price 
-          ? `<div class="mt-2 pt-2 border-t border-slate-800">
-               <div class="flex items-center justify-between mb-1">
-                 <span class="text-[10px] text-purple-400 font-medium">🤖 AI Predicts</span>
-                 <span class="text-xs text-green-400 font-bold">$${game.ai_predicted}</span>
-               </div>
-               <div class="h-1 bg-slate-800 rounded-full overflow-hidden">
-                 <div class="ai-predict-bar h-full rounded-full" style="width: ${game.ai_confidence}%"></div>
-               </div>
-               <p class="text-[10px] text-slate-500 mt-1">${game.ai_confidence}% confidence • ${game.ai_days} days</p>
-             </div>` 
+          ? `<div class="mt-2 pt-2 border-t border-slate-800"><div class="flex items-center justify-between mb-1"><span class="text-[10px] text-purple-400 font-medium">🤖 AI Predicts</span><span class="text-xs text-green-400 font-bold">$${game.ai_predicted}</span></div><div class="h-1 bg-slate-800 rounded-full overflow-hidden"><div class="ai-predict-bar h-full rounded-full" style="width: ${game.ai_confidence}%"></div></div><p class="text-[10px] text-slate-500 mt-1">${game.ai_confidence}% confidence • ${game.ai_days} days</p></div>` 
           : '';
 
         return `
           <div class="game-card bg-[#111827] border border-slate-800 rounded-2xl overflow-hidden hover:border-blue-500/50 hover:shadow-xl hover:shadow-blue-500/10 cursor-pointer">
-            <div class="relative aspect-[3/4] overflow-hidden">
-              <img src="${game.image}" alt="${game.name}" 
-                   class="cover-img w-full h-full object-cover"
-                   onerror="this.src='https://via.placeholder.com/300x400/1e293b/3b82f6?text=${encodeURIComponent(game.name)}'">
+            <div class="relative aspect-[3/4] overflow-hidden bg-slate-800">
+              <img src="${game.image}" alt="${game.name}" class="cover-img w-full h-full object-cover" onerror="this.src='https://placehold.co/300x400/1e293b/3b82f6?text=${encodeURIComponent(game.name)}'">
               ${discountBadge}
               <div class="absolute top-2 right-2">${stockBadge}</div>
               <div class="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/90 to-transparent p-3 pt-8">
-                <div class="flex items-center gap-1">
-                  <span class="text-yellow-400 text-xs">⭐ ${game.rating}</span>
-                  <span class="text-slate-400 text-xs">• ${game.genre}</span>
-                </div>
+                <div class="flex items-center gap-1"><span class="text-yellow-400 text-xs">⭐ ${game.rating}</span><span class="text-slate-400 text-xs">• ${game.genre}</span></div>
               </div>
             </div>
             <div class="p-3">
-              <h3 class="font-semibold text-sm mb-1 truncate group-hover:text-blue-400 transition">${game.name}</h3>
+              <h3 class="font-semibold text-sm mb-1 truncate">${game.name}</h3>
               <div class="flex items-end justify-between">
                 <div>
                   <p class="text-lg font-bold text-white">$${game.current_price}</p>
                   ${game.original_price > game.current_price ? `<p class="text-xs text-slate-500 line-through">$${game.original_price}</p>` : ''}
                 </div>
-                <button onclick="window.open('${game.deal_url}', '_blank')" 
-                  class="px-3 py-1.5 ${game.in_stock ? 'bg-blue-600 hover:bg-blue-500' : 'bg-slate-700 cursor-not-allowed'} 
-                  text-white text-xs font-medium rounded-lg transition">
-                  ${game.in_stock ? 'View →' : 'Notify'}
-                </button>
+                <button onclick="window.open('${game.deal_url}', '_blank')" class="px-3 py-1.5 ${game.in_stock ? 'bg-blue-600 hover:bg-blue-500' : 'bg-slate-700 cursor-not-allowed'} text-white text-xs font-medium rounded-lg transition">${game.in_stock ? 'View →' : 'Notify'}</button>
               </div>
               ${aiSection}
             </div>
@@ -524,8 +275,6 @@
 
     function getFilteredGames() {
       let filtered = games;
-
-      // Category filter
       if (currentFilter !== 'all') {
         if (currentFilter === 'sale') filtered = filtered.filter(g => g.discount > 0);
         else if (currentFilter === 'ai') filtered = filtered.filter(g => g.ai_predicted < g.current_price);
@@ -533,153 +282,94 @@
         else if (currentFilter === 'trending') filtered = filtered.filter(g => g.category === 'trending');
         else if (currentFilter === 'rated') filtered = filtered.filter(g => g.rating >= 4.5);
       }
-
-      // Genre filter
-      if (selectedGenres.size > 0) {
-        filtered = filtered.filter(g => selectedGenres.has(g.genre));
-      }
-
-      // Price filter
+      if (selectedGenres.size > 0) filtered = filtered.filter(g => selectedGenres.has(g.genre));
       if (priceRanges.length > 0) {
-        filtered = filtered.filter(g => {
-          return priceRanges.some(range => {
-            if (range === 'under20') return g.current_price < 20;
-            if (range === '20to40') return g.current_price >= 20 && g.current_price < 40;
-            if (range === '40to60') return g.current_price >= 40 && g.current_price < 60;
-            if (range === '60plus') return g.current_price >= 60;
-            return false;
-          });
-        });
+        filtered = filtered.filter(g => priceRanges.some(range => {
+          if (range === 'under20') return g.current_price < 20;
+          if (range === '20to40') return g.current_price >= 20 && g.current_price < 40;
+          if (range === '40to60') return g.current_price >= 40 && g.current_price < 60;
+          if (range === '60plus') return g.current_price >= 60;
+          return false;
+        }));
       }
-
       return filtered;
     }
 
-    // ============================================
-    // SIDEBAR NAVIGATION
-    // ============================================
     document.querySelectorAll('.sidebar-link').forEach(link => {
       link.addEventListener('click', (e) => {
         e.preventDefault();
-        document.querySelectorAll('.sidebar-link').forEach(l => {
-          l.classList.remove('active');
-          l.classList.add('text-slate-400', 'border-transparent');
-          l.classList.remove('text-blue-300');
-        });
-        link.classList.add('active');
-        link.classList.remove('text-slate-400', 'border-transparent');
-
+        document.querySelectorAll('.sidebar-link').forEach(l => { l.classList.remove('active'); l.classList.add('text-slate-400', 'border-transparent'); l.classList.remove('text-blue-300'); });
+        link.classList.add('active'); link.classList.remove('text-slate-400', 'border-transparent');
         currentFilter = link.dataset.filter;
-
-        const titles = {
-          sale: '🔥 Deals of the Week',
-          trending: '📈 Trending Now',
-          new: '🆕 New Releases',
-          rated: '⭐ Top Rated',
-          ai: '🤖 AI Predicted Drops'
-        };
+        const titles = { sale: '🔥 Deals of the Week', trending: '📈 Trending Now', new: '🆕 New Releases', rated: '⭐ Top Rated', ai: '🤖 AI Predicted Drops' };
         document.getElementById('section-title').textContent = titles[currentFilter] || 'All Games';
-
         renderGames();
       });
     });
 
-    // Genre filters
     document.querySelectorAll('.genre-tag').forEach(tag => {
       tag.addEventListener('click', () => {
         const genre = tag.dataset.genre;
-        if (selectedGenres.has(genre)) {
-          selectedGenres.delete(genre);
-          tag.classList.remove('border-blue-500', 'text-blue-300');
-          tag.classList.add('border-slate-700', 'text-slate-300');
-        } else {
-          selectedGenres.add(genre);
-          tag.classList.add('border-blue-500', 'text-blue-300');
-          tag.classList.remove('border-slate-700', 'text-slate-300');
-        }
+        if (selectedGenres.has(genre)) { selectedGenres.delete(genre); tag.classList.remove('border-blue-500', 'text-blue-300'); tag.classList.add('border-slate-700', 'text-slate-300'); }
+        else { selectedGenres.add(genre); tag.classList.add('border-blue-500', 'text-blue-300'); tag.classList.remove('border-slate-700', 'text-slate-300'); }
         renderGames();
       });
     });
 
-    // Price filters
     document.querySelectorAll('.price-filter').forEach(checkbox => {
-      checkbox.addEventListener('change', () => {
-        priceRanges = Array.from(document.querySelectorAll('.price-filter:checked')).map(cb => cb.value);
-        renderGames();
-      });
+      checkbox.addEventListener('change', () => { priceRanges = Array.from(document.querySelectorAll('.price-filter:checked')).map(cb => cb.value); renderGames(); });
     });
 
-    // ============================================
-    // SEARCH
-    // ============================================
+    function openSearch() { document.getElementById('search-overlay').classList.add('active'); document.getElementById('search-input').focus(); }
+    function closeSearch() { document.getElementById('search-overlay').classList.remove('active'); document.getElementById('search-input').value = ''; document.getElementById('search-results').innerHTML = ''; }
+    document.addEventListener('keydown', (e) => { if (e.key === 'Escape') closeSearch(); });
+    document.getElementById('search-overlay').addEventListener('click', (e) => { if (e.target === document.getElementById('search-overlay')) closeSearch(); });
+
     const searchInput = document.getElementById('search-input');
     const searchResults = document.getElementById('search-results');
-
     searchInput.addEventListener('input', (e) => {
-      const query = e.target.value.toLowerCase();
-      if (query.length < 2) {
-        searchResults.innerHTML = '';
-        return;
-      }
-
+      const query = e.target.value.toLowerCase().trim();
+      if (query.length < 1) { searchResults.innerHTML = '<p class="text-slate-500 text-sm p-3">Type to search games...</p>'; return; }
       const matches = games.filter(g => g.name.toLowerCase().includes(query));
+      if (matches.length === 0) { searchResults.innerHTML = '<p class="text-slate-500 text-sm p-3">No games found</p>'; return; }
       searchResults.innerHTML = matches.map(g => `
-        <div class="flex items-center gap-3 p-3 hover:bg-slate-800 rounded-xl cursor-pointer transition" onclick="window.open('${g.deal_url}', '_blank')">
-          <img src="${g.image}" class="w-12 h-16 object-cover rounded-lg" onerror="this.style.display='none'">
-          <div>
-            <p class="font-medium text-sm">${g.name}</p>
-            <p class="text-xs text-slate-400">$${g.current_price} • ${g.genre}</p>
+        <div class="flex items-center gap-4 p-3 hover:bg-slate-800 rounded-xl cursor-pointer transition" onclick="window.open('${g.deal_url}', '_blank')">
+          <img src="${g.image}" class="w-14 h-20 object-cover rounded-lg shrink-0" onerror="this.style.display='none'">
+          <div class="flex-1 min-w-0">
+            <p class="font-semibold text-white truncate">${g.name}</p>
+            <div class="flex items-center gap-3 mt-1">
+              <span class="text-sm font-bold text-white">$${g.current_price}</span>
+              ${g.discount > 0 ? `<span class="text-xs text-green-400">-${g.discount}%</span>` : ''}
+              <span class="text-xs text-slate-400">${g.genre}</span>
+              <span class="text-xs text-yellow-400">⭐ ${g.rating}</span>
+            </div>
           </div>
+          <span class="text-blue-400 text-sm">→</span>
         </div>
       `).join('');
     });
 
-    // ============================================
-    // ALERT FORM
-    // ============================================
     const alertSelect = document.getElementById('alert-game');
-    games.forEach(g => {
-      const option = document.createElement('option');
-      option.value = g.id;
-      option.textContent = g.name;
-      alertSelect.appendChild(option);
-    });
+    games.forEach(g => { const option = document.createElement('option'); option.value = g.id; option.textContent = g.name; alertSelect.appendChild(option); });
 
-    document.getElementById('alert-form').addEventListener('submit', async (e) => {
+    document.getElementById('alert-form').addEventListener('submit', (e) => {
       e.preventDefault();
       const email = document.getElementById('alert-email').value;
       const gameId = document.getElementById('alert-game').value;
       const price = document.getElementById('alert-price').value;
       const msg = document.getElementById('alert-message');
-
-      // Save to localStorage for demo (replace with Supabase later)
       const alerts = JSON.parse(localStorage.getItem('price_alerts') || '[]');
       alerts.push({ email, gameId, price, date: new Date().toISOString() });
       localStorage.setItem('price_alerts', JSON.stringify(alerts));
-
       msg.textContent = '✅ Alert saved! We will notify you when the price drops.';
       msg.className = 'mt-3 text-sm text-green-400';
       msg.classList.remove('hidden');
       e.target.reset();
     });
 
-    function changeView(view) {
-      currentView = view;
-      renderGames();
-    }
-
-    // ============================================
-    // INIT
-    // ============================================
     document.addEventListener('DOMContentLoaded', () => {
-      // Update sale count
-      const saleCount = games.filter(g => g.discount > 0).length;
-      document.getElementById('sale-count').textContent = saleCount;
-
-      // Simulate loading
-      setTimeout(() => {
-        renderGames();
-      }, 800);
+      document.getElementById('sale-count').textContent = games.filter(g => g.discount > 0).length;
+      setTimeout(() => { renderGames(); }, 800);
     });
   </script>
 </body>
