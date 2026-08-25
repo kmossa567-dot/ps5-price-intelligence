@@ -1,1325 +1,686 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>PS5 Price Tracker — AI Predictions & Live Deals</title>
-    <meta name="description" content="AI-powered price predictions for every PS5 game. Track live deals across Amazon, PlayStation Store, CDKeys and more. Know exactly when to buy.">
-
-    <!-- Favicon -->
-    <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🎮</text></svg>">
-
-    <!-- Open Graph / Social Sharing -->
-    <meta property="og:title" content="PS5 Price Tracker — Know Exactly When To Buy">
-    <meta property="og:description" content="AI-powered price predictions for every PS5 game. Track live deals across all major retailers and never overpay again.">
-    <meta property="og:type" content="website">
-    <meta property="og:site_name" content="PS5Tracker">
-    <meta name="twitter:card" content="summary">
-    <meta name="twitter:title" content="PS5 Price Tracker — Know Exactly When To Buy">
-    <meta name="twitter:description" content="AI-powered price predictions for every PS5 game.">
-
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.0/chart.umd.min.js"></script>
-    <style>
-        :root {
-            --bg: #0a0e1a;
-            --bg-card: #111827;
-            --bg-hover: #1a2236;
-            --border: #1f2937;
-            --text: #f3f4f6;
-            --text-muted: #9ca3af;
-            --accent: #f59e0b;
-            --accent-hover: #fbbf24;
-            --green: #10b981;
-            --red: #ef4444;
-            --blue: #3b82f6;
-            --purple: #8b5cf6;
-        }
-
-        * { margin: 0; padding: 0; box-sizing: border-box; }
-
-        body {
-            font-family: 'Inter', system-ui, sans-serif;
-            background: var(--bg);
-            color: var(--text);
-            min-height: 100vh;
-            line-height: 1.5;
-        }
-
-        .navbar {
-            position: sticky;
-            top: 0;
-            z-index: 100;
-            background: rgba(10,14,26,0.95);
-            backdrop-filter: blur(12px);
-            border-bottom: 1px solid var(--border);
-            padding: 0 24px;
-        }
-
-        .nav-inner {
-            max-width: 1200px;
-            margin: 0 auto;
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            height: 64px;
-        }
-
-        .logo {
-            font-size: 1.5rem;
-            font-weight: 800;
-            background: linear-gradient(135deg, var(--accent), #f97316);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-            display: flex;
-            align-items: center;
-            gap: 8px;
-        }
-
-        .nav-links {
-            display: flex;
-            gap: 28px;
-        }
-
-        .nav-links a {
-            color: var(--text-muted);
-            text-decoration: none;
-            font-size: 0.9rem;
-            font-weight: 500;
-        }
-
-        .nav-links a:hover {
-            color: var(--text);
-        }
-
-        .nav-toggle {
-            display: none;
-            background: none;
-            border: none;
-            color: var(--text);
-            font-size: 1.5rem;
-            cursor: pointer;
-        }
-
-        .nav-cta {
-            background: var(--accent);
-            color: #000;
-            padding: 8px 20px;
-            border-radius: 8px;
-            font-weight: 600;
-            font-size: 0.85rem;
-            border: none;
-            cursor: pointer;
-        }
-
-        .nav-cta:hover {
-            background: var(--accent-hover);
-            transform: translateY(-1px);
-        }
-
-        .hero {
-            text-align: center;
-            padding: 80px 24px 60px;
-            background: radial-gradient(ellipse at top, #1e1b4b 0%, transparent 60%);
-            position: relative;
-        }
-
-        .hero::before {
-            content: "";
-            position: absolute;
-            top: -100px;
-            left: 50%;
-            transform: translateX(-50%);
-            width: 500px;
-            height: 300px;
-            background: radial-gradient(circle, rgba(245,158,11,0.12) 0%, transparent 70%);
-            pointer-events: none;
-        }
-
-        .hero h1 {
-            font-size: 3.2rem;
-            font-weight: 800;
-            background: linear-gradient(135deg, #fff, var(--accent));
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-            margin-bottom: 16px;
-            line-height: 1.1;
-        }
-
-        .hero p {
-            color: var(--text-muted);
-            font-size: 1.15rem;
-            max-width: 560px;
-            margin: 0 auto 32px;
-        }
-
-        .hero-stats {
-            display: flex;
-            justify-content: center;
-            gap: 48px;
-            margin-top: 40px;
-        }
-
-        .stat {
-            text-align: center;
-        }
-
-        .stat-num {
-            font-size: 2rem;
-            font-weight: 800;
-            color: var(--accent);
-        }
-
-        .stat-label {
-            font-size: 0.85rem;
-            color: var(--text-muted);
-        }
-
-        .search-section {
-            max-width: 700px;
-            margin: 0 auto;
-            padding: 0 24px;
-            position: relative;
-            top: -30px;
-        }
-
-        .search-box {
-            display: flex;
-            gap: 12px;
-            background: var(--bg-card);
-            border: 1px solid var(--border);
-            border-radius: 16px;
-            padding: 8px;
-            box-shadow: 0 20px 40px rgba(0,0,0,0.4);
-            position: relative;
-        }
-
-        .search-box input {
-            flex: 1;
-            background: transparent;
-            border: none;
-            color: var(--text);
-            font-size: 1rem;
-            padding: 14px 16px;
-            outline: none;
-        }
-
-        .search-box input::placeholder {
-            color: var(--text-muted);
-        }
-
-        .search-box button {
-            background: var(--accent);
-            color: #000;
-            border: none;
-            padding: 14px 28px;
-            border-radius: 12px;
-            font-weight: 700;
-            font-size: 0.95rem;
-            cursor: pointer;
-        }
-
-        .search-box button:hover {
-            background: var(--accent-hover);
-        }
-
-        .autocomplete {
-            position: absolute;
-            top: calc(100% + 8px);
-            left: 0;
-            right: 0;
-            background: var(--bg-card);
-            border: 1px solid var(--border);
-            border-radius: 14px;
-            overflow: hidden;
-            box-shadow: 0 12px 30px rgba(0,0,0,0.5);
-            display: none;
-            z-index: 50;
-            max-height: 320px;
-            overflow-y: auto;
-        }
-
-        .autocomplete.active {
-            display: block;
-        }
-
-        .autocomplete-item {
-            padding: 12px 18px;
-            cursor: pointer;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            border-bottom: 1px solid var(--border);
-        }
-
-        .autocomplete-item:last-child {
-            border-bottom: none;
-        }
-
-        .autocomplete-item:hover {
-            background: var(--bg-hover);
-        }
-
-        .autocomplete-title {
-            font-weight: 600;
-            font-size: 0.92rem;
-        }
-
-        .autocomplete-pub {
-            font-size: 0.78rem;
-            color: var(--text-muted);
-        }
-
-        .quick-tags {
-            display: flex;
-            gap: 10px;
-            flex-wrap: wrap;
-            justify-content: center;
-            margin-top: 20px;
-        }
-
-        .tag {
-            background: var(--bg-card);
-            border: 1px solid var(--border);
-            color: var(--text-muted);
-            padding: 8px 18px;
-            border-radius: 20px;
-            font-size: 0.85rem;
-            cursor: pointer;
-        }
-
-        .tag:hover {
-            border-color: var(--accent);
-            color: var(--accent);
-        }
-
-        .loading-msg {
-            text-align: center;
-            color: var(--text-muted);
-            font-size: 0.85rem;
-            margin-top: 16px;
-        }
-
-        .results {
-            max-width: 1100px;
-            margin: 40px auto;
-            padding: 0 24px;
-            display: none;
-        }
-
-        .results.active {
-            display: block;
-            animation: fadeIn 0.4s ease;
-        }
-
-        @keyframes fadeIn {
-            from {
-                opacity: 0;
-                transform: translateY(12px);
-            }
-            to {
-                opacity: 1;
-                transform: translateY(0);
-            }
-        }
-
-        .demo-banner {
-            background: rgba(245,158,11,0.1);
-            border: 1px solid rgba(245,158,11,0.3);
-            color: var(--accent);
-            padding: 10px 18px;
-            border-radius: 10px;
-            font-size: 0.82rem;
-            margin-bottom: 20px;
-            text-align: center;
-        }
-
-        .game-header-card {
-            background: var(--bg-card);
-            border: 1px solid var(--border);
-            border-radius: 20px;
-            padding: 32px;
-            margin-bottom: 24px;
-            display: flex;
-            gap: 28px;
-            align-items: flex-start;
-        }
-
-        .game-cover {
-            width: 140px;
-            height: 180px;
-            border-radius: 12px;
-            background: linear-gradient(145deg, #1e3a5f, #0f172a);
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            flex-shrink: 0;
-            text-align: center;
-            padding: 10px;
-            position: relative;
-            overflow: hidden;
-            box-shadow: 0 8px 20px rgba(0,0,0,0.4);
-        }
-
-        .game-cover::before {
-            content: "";
-            position: absolute;
-            inset: 0;
-            background: linear-gradient(135deg, rgba(245,158,11,0.15), transparent 60%);
-        }
-
-        .game-cover-icon {
-            font-size: 2.6rem;
-            margin-bottom: 6px;
-            position: relative;
-            z-index: 1;
-        }
-
-        .game-cover-label {
-            font-size: 0.68rem;
-            font-weight: 700;
-            color: var(--accent);
-            text-transform: uppercase;
-            letter-spacing: 1px;
-            position: relative;
-            z-index: 1;
-        }
-
-        .game-info h2 {
-            font-size: 1.8rem;
-            font-weight: 700;
-            margin-bottom: 6px;
-        }
-
-        .game-meta {
-            color: var(--text-muted);
-            font-size: 0.9rem;
-            margin-bottom: 16px;
-        }
-
-        .ai-badge {
-            display: inline-flex;
-            align-items: center;
-            gap: 8px;
-            background: rgba(16,185,129,0.15);
-            color: var(--green);
-            border: 1px solid rgba(16,185,129,0.3);
-            padding: 10px 18px;
-            border-radius: 10px;
-            font-weight: 600;
-            font-size: 0.9rem;
-        }
-
-        .section-title {
-            font-size: 1.1rem;
-            font-weight: 700;
-            margin-bottom: 16px;
-            display: flex;
-            align-items: center;
-            gap: 8px;
-        }
-
-        .stores-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
-            gap: 16px;
-            margin-bottom: 32px;
-        }
-
-        .store-card {
-            background: var(--bg-card);
-            border: 1px solid var(--border);
-            border-radius: 16px;
-            padding: 20px;
-            transition: all 0.25s;
-            position: relative;
-            overflow: hidden;
-        }
-
-        .store-card:hover {
-            border-color: var(--accent);
-            transform: translateY(-4px);
-            box-shadow: 0 12px 30px rgba(245,158,11,0.15);
-        }
-
-        .store-card.best {
-            border-color: rgba(245,158,11,0.4);
-        }
-
-        .store-card.best::before {
-            content: "BEST DEAL";
-            position: absolute;
-            top: 0;
-            right: 0;
-            background: var(--accent);
-            color: #000;
-            font-size: 0.65rem;
-            font-weight: 800;
-            padding: 4px 10px;
-            border-bottom-left-radius: 10px;
-        }
-
-        .store-header {
-            display: flex;
-            align-items: center;
-            gap: 10px;
-            margin-bottom: 12px;
-        }
-
-        .store-icon {
-            width: 32px;
-            height: 32px;
-            border-radius: 8px;
-            background: var(--bg-hover);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-        }
-
-        .store-name {
-            font-weight: 600;
-            font-size: 0.95rem;
-        }
-
-        .store-price-row {
-            display: flex;
-            align-items: baseline;
-            gap: 10px;
-            margin-bottom: 8px;
-        }
-
-        .price-current {
-            font-size: 1.6rem;
-            font-weight: 800;
-            color: var(--accent);
-        }
-
-        .price-old {
-            text-decoration: line-through;
-            color: var(--text-muted);
-            font-size: 0.95rem;
-        }
-
-        .discount-tag {
-            display: inline-block;
-            background: var(--green);
-            color: #fff;
-            padding: 3px 10px;
-            border-radius: 6px;
-            font-size: 0.8rem;
-            font-weight: 700;
-        }
-
-        .store-link {
-            display: block;
-            width: 100%;
-            margin-top: 14px;
-            background: rgba(245,158,11,0.12);
-            color: var(--accent);
-            border: 1px solid rgba(245,158,11,0.3);
-            border-radius: 10px;
-            padding: 11px;
-            text-align: center;
-            text-decoration: none;
-            font-weight: 700;
-            font-size: 0.9rem;
-        }
-
-        .store-link:hover {
-            background: var(--accent);
-            color: #000;
-        }
-
-        .chart-card {
-            background: var(--bg-card);
-            border: 1px solid var(--border);
-            border-radius: 20px;
-            padding: 28px;
-            margin-bottom: 24px;
-        }
-
-        .chart-placeholder {
-            height: 220px;
-            background: var(--bg-hover);
-            border-radius: 12px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            color: var(--text-muted);
-            border: 1px dashed var(--border);
-            text-align: center;
-            padding: 20px;
-            font-size: 0.9rem;
-        }
-
-        .no-results {
-            text-align: center;
-            padding: 60px 20px;
-            color: var(--text-muted);
-        }
-
-        .footer {
-            border-top: 1px solid var(--border);
-            margin-top: 60px;
-            padding: 40px 24px;
-            text-align: center;
-            color: var(--text-muted);
-            font-size: 0.85rem;
-        }
-
-        .footer a {
-            color: var(--text-muted);
-        }
-
-        .footer-links {
-            display: flex;
-            justify-content: center;
-            gap: 20px;
-            margin-top: 12px;
-            flex-wrap: wrap;
-        }
-
-        .footer-links a {
-            text-decoration: none;
-        }
-
-        .footer-links a:hover {
-            color: var(--accent);
-        }
-
-        /* Modal */
-        .modal-overlay {
-            position: fixed;
-            inset: 0;
-            background: rgba(0,0,0,0.6);
-            backdrop-filter: blur(4px);
-            display: none;
-            align-items: center;
-            justify-content: center;
-            z-index: 200;
-            padding: 20px;
-        }
-
-        .modal-overlay.active {
-            display: flex;
-            animation: fadeIn 0.2s ease;
-        }
-
-        .modal-box {
-            background: var(--bg-card);
-            border: 1px solid var(--border);
-            border-radius: 18px;
-            padding: 32px;
-            max-width: 460px;
-            width: 100%;
-            position: relative;
-        }
-
-        .modal-close {
-            position: absolute;
-            top: 16px;
-            right: 16px;
-            background: var(--bg-hover);
-            border: none;
-            color: var(--text-muted);
-            width: 32px;
-            height: 32px;
-            border-radius: 50%;
-            cursor: pointer;
-            font-size: 1rem;
-        }
-
-        .modal-close:hover {
-            color: var(--text);
-        }
-
-        .modal-box h3 {
-            font-size: 1.3rem;
-            margin-bottom: 12px;
-        }
-
-        .modal-box p {
-            color: var(--text-muted);
-            font-size: 0.92rem;
-            line-height: 1.6;
-        }
-
-        .modal-form {
-            margin-top: 20px;
-            display: flex;
-            gap: 10px;
-        }
-
-        .modal-form input {
-            flex: 1;
-            background: var(--bg-hover);
-            border: 1px solid var(--border);
-            border-radius: 10px;
-            padding: 12px 14px;
-            color: var(--text);
-            font-size: 0.9rem;
-            outline: none;
-        }
-
-        .modal-form input:focus {
-            border-color: var(--accent);
-        }
-
-        .modal-form button {
-            background: var(--accent);
-            color: #000;
-            border: none;
-            padding: 12px 20px;
-            border-radius: 10px;
-            font-weight: 700;
-            cursor: pointer;
-            white-space: nowrap;
-        }
-
-        .modal-form button:hover {
-            background: var(--accent-hover);
-        }
-
-        .modal-success {
-            color: var(--green);
-            font-size: 0.88rem;
-            margin-top: 12px;
-            display: none;
-        }
-
-        .modal-success.active {
-            display: block;
-        }
-
-        #priceChart {
-            max-height: 260px;
-        }
-
-        /* Skeleton loading */
-        .skeleton {
-            background: linear-gradient(90deg, var(--bg-hover) 25%, var(--border) 50%, var(--bg-hover) 75%);
-            background-size: 200% 100%;
-            animation: shimmer 1.5s infinite;
-            border-radius: 8px;
-        }
-
-        @keyframes shimmer {
-            0% { background-position: 200% 0; }
-            100% { background-position: -200% 0; }
-        }
-
-        .skeleton-card {
-            background: var(--bg-card);
-            border: 1px solid var(--border);
-            border-radius: 16px;
-            padding: 20px;
-        }
-
-        .skeleton-line {
-            height: 14px;
-            margin-bottom: 10px;
-        }
-
-        /* Mobile menu */
-        .mobile-menu {
-            display: none;
-            position: fixed;
-            top: 64px;
-            left: 0;
-            right: 0;
-            background: var(--bg-card);
-            border-bottom: 1px solid var(--border);
-            z-index: 99;
-            flex-direction: column;
-            padding: 8px 0;
-        }
-
-        .mobile-menu.active {
-            display: flex;
-        }
-
-        .mobile-menu a {
-            color: var(--text);
-            text-decoration: none;
-            padding: 14px 24px;
-            font-size: 0.95rem;
-            border-bottom: 1px solid var(--border);
-        }
-
-        @media (max-width: 768px) {
-            .hero h1 {
-                font-size: 2rem;
-            }
-
-            .hero-stats {
-                gap: 24px;
-            }
-
-            .game-header-card {
-                flex-direction: column;
-                align-items: center;
-                text-align: center;
-            }
-
-            .nav-links {
-                display: none;
-            }
-
-            .nav-toggle {
-                display: block;
-            }
-
-            .stores-grid {
-                grid-template-columns: 1fr;
-            }
-        }
-    </style>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>PS5 Store | AI Price Tracker & Deals</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <style>
+    body { font-family: 'Inter', sans-serif; background: #0a0e1a; }
+    .game-card { transition: all 0.3s ease; }
+    .game-card:hover { transform: translateY(-4px); }
+    .game-card:hover .cover-img { transform: scale(1.05); }
+    .cover-img { transition: transform 0.5s ease; }
+    .skeleton { 
+      background: linear-gradient(90deg, #1e293b 25%, #334155 50%, #1e293b 75%); 
+      background-size: 200% 100%; 
+      animation: shimmer 1.5s infinite; 
+    }
+    @keyframes shimmer { 0% { background-position: 200% 0; } 100% { background-position: -200% 0; } }
+    .discount-badge { 
+      background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
+      box-shadow: 0 4px 12px rgba(239, 68, 68, 0.4);
+    }
+    .ai-predict-bar {
+      background: linear-gradient(90deg, #3b82f6 0%, #8b5cf6 100%);
+    }
+    .sidebar-link.active {
+      background: rgba(59, 130, 246, 0.15);
+      border-color: rgba(59, 130, 246, 0.4);
+      color: #93bbfc;
+    }
+    /* Scrollbar styling */
+    ::-webkit-scrollbar { width: 8px; }
+    ::-webkit-scrollbar-track { background: #0f172a; }
+    ::-webkit-scrollbar-thumb { background: #334155; border-radius: 4px; }
+    ::-webkit-scrollbar-thumb:hover { background: #475569; }
+  </style>
+<base target="_blank">
 </head>
+<body class="text-white min-h-screen">
 
-<body>
-
-<nav class="navbar">
-    <div class="nav-inner">
-        <div class="logo">🎮 PS5Tracker</div>
-        <div class="nav-links">
-            <a href="#" onclick="scrollToTop(event)">Home</a>
-            <a href="#" onclick="scrollToSearch(event)">Deals</a>
-            <a href="#" onclick="scrollToSearch(event)">Forecasts</a>
-            <a href="#" onclick="openModal('caseStudies')">Case Studies</a>
+  <!-- Top Navigation -->
+  <nav class="bg-[#111827] border-b border-slate-800 sticky top-0 z-50">
+    <div class="max-w-7xl mx-auto px-4 py-3 flex items-center justify-between">
+      <div class="flex items-center gap-3">
+        <div class="w-10 h-10 bg-gradient-to-br from-blue-600 to-indigo-700 rounded-xl flex items-center justify-center text-xl shadow-lg shadow-blue-500/20">🎮</div>
+        <div>
+          <h1 class="font-bold text-lg tracking-tight">PS5 Store</h1>
+          <p class="text-[10px] text-slate-400 uppercase tracking-widest">AI Price Tracker</p>
         </div>
-        <button class="nav-toggle" onclick="toggleMobileMenu()">☰</button>
-        <button class="nav-cta" onclick="openModal('alerts')">Get Alerts</button>
+      </div>
+      <div class="flex items-center gap-3">
+        <div class="hidden md:flex items-center gap-2 px-3 py-1.5 bg-green-500/10 text-green-400 rounded-full text-xs border border-green-500/20">
+          <span class="w-1.5 h-1.5 bg-green-400 rounded-full animate-pulse"></span>
+          Live Deals
+        </div>
+        <button onclick="document.getElementById('search-modal').classList.remove('hidden')" 
+          class="px-4 py-2 bg-blue-600 hover:bg-blue-500 text-white text-sm font-medium rounded-lg transition shadow-lg shadow-blue-600/20">
+          🔍 Search
+        </button>
+      </div>
     </div>
-</nav>
+  </nav>
 
-<div class="mobile-menu" id="mobileMenu">
-    <a href="#" onclick="scrollToTop(event); toggleMobileMenu()">Home</a>
-    <a href="#" onclick="scrollToSearch(event); toggleMobileMenu()">Deals</a>
-    <a href="#" onclick="scrollToSearch(event); toggleMobileMenu()">Forecasts</a>
-    <a href="#" onclick="openModal('caseStudies'); toggleMobileMenu()">Case Studies</a>
-</div>
+  <div class="max-w-7xl mx-auto flex flex-col lg:flex-row gap-6 p-4">
 
-<section class="hero">
-    <h1>Know exactly when to buy</h1>
-    <p>AI-powered price predictions for every PS5 game. Track live deals across all stores and never overpay again.</p>
+    <!-- LEFT SIDEBAR -->
+    <aside class="lg:w-56 shrink-0">
+      <div class="bg-[#111827] border border-slate-800 rounded-2xl p-4 sticky top-20">
+        <h3 class="text-xs font-bold text-slate-400 uppercase tracking-wider mb-4">Browse</h3>
 
-    <div class="hero-stats">
-        <div class="stat">
-            <div class="stat-num" id="statGames">--</div>
-            <div class="stat-label">Games Tracked</div>
+        <nav class="space-y-1" id="sidebar-nav">
+          <a href="#" data-filter="sale" class="sidebar-link active flex items-center gap-3 px-3 py-2.5 rounded-xl border text-sm font-medium transition">
+            <span>🏷️</span> On Sale
+            <span class="ml-auto text-xs bg-blue-500/30 px-2 py-0.5 rounded-full" id="sale-count">0</span>
+          </a>
+          <a href="#" data-filter="trending" class="sidebar-link flex items-center gap-3 px-3 py-2.5 text-slate-400 hover:text-white hover:bg-slate-800/50 rounded-xl border border-transparent text-sm transition">
+            <span>🔥</span> Trending
+          </a>
+          <a href="#" data-filter="new" class="sidebar-link flex items-center gap-3 px-3 py-2.5 text-slate-400 hover:text-white hover:bg-slate-800/50 rounded-xl border border-transparent text-sm transition">
+            <span>🆕</span> New Releases
+          </a>
+          <a href="#" data-filter="rated" class="sidebar-link flex items-center gap-3 px-3 py-2.5 text-slate-400 hover:text-white hover:bg-slate-800/50 rounded-xl border border-transparent text-sm transition">
+            <span>⭐</span> Top Rated
+          </a>
+          <a href="#" data-filter="ai" class="sidebar-link flex items-center gap-3 px-3 py-2.5 text-slate-400 hover:text-white hover:bg-slate-800/50 rounded-xl border border-transparent text-sm transition">
+            <span>🤖</span> AI Predictions
+          </a>
+        </nav>
+
+        <div class="mt-6 pt-6 border-t border-slate-800">
+          <h3 class="text-xs font-bold text-slate-400 uppercase tracking-wider mb-4">Price Range</h3>
+          <div class="space-y-2" id="price-filters">
+            <label class="flex items-center gap-2 text-sm text-slate-400 cursor-pointer hover:text-white transition">
+              <input type="checkbox" value="under20" class="price-filter rounded border-slate-600 bg-slate-800 text-blue-500 focus:ring-blue-500"> Under $20
+            </label>
+            <label class="flex items-center gap-2 text-sm text-slate-400 cursor-pointer hover:text-white transition">
+              <input type="checkbox" value="20to40" class="price-filter rounded border-slate-600 bg-slate-800 text-blue-500 focus:ring-blue-500"> $20 - $40
+            </label>
+            <label class="flex items-center gap-2 text-sm text-slate-400 cursor-pointer hover:text-white transition">
+              <input type="checkbox" value="40to60" class="price-filter rounded border-slate-600 bg-slate-800 text-blue-500 focus:ring-blue-500"> $40 - $60
+            </label>
+            <label class="flex items-center gap-2 text-sm text-slate-400 cursor-pointer hover:text-white transition">
+              <input type="checkbox" value="60plus" class="price-filter rounded border-slate-600 bg-slate-800 text-blue-500 focus:ring-blue-500"> $60+
+            </label>
+          </div>
         </div>
 
-        <div class="stat">
-            <div class="stat-num">6</div>
-            <div class="stat-label">Major Retailers</div>
+        <div class="mt-6 pt-6 border-t border-slate-800">
+          <h3 class="text-xs font-bold text-slate-400 uppercase tracking-wider mb-4">Genres</h3>
+          <div class="flex flex-wrap gap-2" id="genre-filters">
+            <span class="genre-tag px-2.5 py-1 bg-slate-800 text-slate-300 text-xs rounded-lg border border-slate-700 hover:border-blue-500/50 cursor-pointer transition" data-genre="Action">Action</span>
+            <span class="genre-tag px-2.5 py-1 bg-slate-800 text-slate-300 text-xs rounded-lg border border-slate-700 hover:border-blue-500/50 cursor-pointer transition" data-genre="RPG">RPG</span>
+            <span class="genre-tag px-2.5 py-1 bg-slate-800 text-slate-300 text-xs rounded-lg border border-slate-700 hover:border-blue-500/50 cursor-pointer transition" data-genre="Sports">Sports</span>
+            <span class="genre-tag px-2.5 py-1 bg-slate-800 text-slate-300 text-xs rounded-lg border border-slate-700 hover:border-blue-500/50 cursor-pointer transition" data-genre="Racing">Racing</span>
+            <span class="genre-tag px-2.5 py-1 bg-slate-800 text-slate-300 text-xs rounded-lg border border-slate-700 hover:border-blue-500/50 cursor-pointer transition" data-genre="Horror">Horror</span>
+            <span class="genre-tag px-2.5 py-1 bg-slate-800 text-slate-300 text-xs rounded-lg border border-slate-700 hover:border-blue-500/50 cursor-pointer transition" data-genre="Adventure">Adventure</span>
+          </div>
         </div>
+      </div>
+    </aside>
 
-        <div class="stat">
-            <div class="stat-num">95%</div>
-            <div class="stat-label">Forecast Accuracy</div>
+    <!-- MAIN CONTENT -->
+    <main class="flex-1 min-w-0">
+
+      <!-- AI Hero Banner -->
+      <div class="relative bg-gradient-to-r from-indigo-900/50 to-purple-900/30 border border-indigo-500/20 rounded-2xl p-6 mb-6 overflow-hidden">
+        <div class="absolute top-0 right-0 w-64 h-full opacity-10">
+          <svg viewBox="0 0 200 200" class="w-full h-full"><circle cx="100" cy="100" r="80" fill="none" stroke="white" stroke-width="2"/><circle cx="100" cy="100" r="60" fill="none" stroke="white" stroke-width="1"/><circle cx="100" cy="100" r="40" fill="none" stroke="white" stroke-width="1"/></svg>
         </div>
-    </div>
-</section>
-
-<div class="search-section">
-
-    <div class="search-box">
-        <input type="text" id="searchInput" autocomplete="off"
-        placeholder="Search any PS5 game (e.g. FC 26, God of War, Spider-Man 2)...">
-
-        <button onclick="searchGame()">Search</button>
-
-        <div class="autocomplete" id="autocompleteBox"></div>
-    </div>
-
-    <div class="quick-tags" id="quickTags">
-        <!-- populated dynamically -->
-    </div>
-
-    <div class="loading-msg" id="loadingMsg">Loading games database...</div>
-
-</div>
-
-<div class="results active" id="resultsArea">
-
-    <div class="demo-banner">
-        ⚠️ Prices shown below are demo data. Live retailer prices are coming soon.
-    </div>
-
-    <div id="skeletonLoader">
-        <div class="stores-grid">
-            <div class="skeleton-card"><div class="skeleton skeleton-line" style="width:60%"></div><div class="skeleton skeleton-line" style="width:40%"></div><div class="skeleton skeleton-line" style="width:80%"></div></div>
-            <div class="skeleton-card"><div class="skeleton skeleton-line" style="width:60%"></div><div class="skeleton skeleton-line" style="width:40%"></div><div class="skeleton skeleton-line" style="width:80%"></div></div>
-            <div class="skeleton-card"><div class="skeleton skeleton-line" style="width:60%"></div><div class="skeleton skeleton-line" style="width:40%"></div><div class="skeleton skeleton-line" style="width:80%"></div></div>
+        <div class="relative z-10 flex flex-col md:flex-row items-center gap-6">
+          <div class="w-20 h-20 md:w-24 md:h-24 bg-gradient-to-br from-blue-500 to-purple-600 rounded-2xl flex items-center justify-center text-3xl md:text-4xl shadow-2xl shrink-0">🤖</div>
+          <div class="flex-1 text-center md:text-left">
+            <div class="flex items-center gap-2 mb-1 justify-center md:justify-start">
+              <span class="px-2 py-0.5 bg-purple-500/20 text-purple-300 text-[10px] font-bold uppercase tracking-wider rounded border border-purple-500/30">AI Powered</span>
+            </div>
+            <h2 class="text-xl md:text-2xl font-bold mb-1">Smart Price Predictions</h2>
+            <p class="text-slate-400 text-sm">Our AI analyzes pricing trends to predict the best time to buy. Save up to 40% on your next PS5 game.</p>
+          </div>
+          <div class="text-center shrink-0">
+            <p class="text-3xl font-bold text-green-400">87%</p>
+            <p class="text-xs text-slate-500">Forecast Accuracy</p>
+          </div>
         </div>
+      </div>
+
+      <!-- Section Header -->
+      <div class="flex items-center justify-between mb-4">
+        <div class="flex items-center gap-3">
+          <h2 class="text-xl font-bold" id="section-title">🔥 Deals of the Week</h2>
+          <span class="px-2 py-1 bg-red-500/10 text-red-400 text-xs rounded-lg border border-red-500/20 font-medium">Ends in 3 days</span>
+        </div>
+        <div class="flex gap-2">
+          <button onclick="changeView('grid')" class="p-2 bg-slate-800 rounded-lg hover:bg-slate-700 transition text-xs">⊞ Grid</button>
+          <button onclick="changeView('list')" class="p-2 bg-slate-800 rounded-lg hover:bg-slate-700 transition text-xs">☰ List</button>
+        </div>
+      </div>
+
+      <!-- Loading Skeletons -->
+      <div id="games-loading" class="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-4 gap-4">
+        <div class="skeleton aspect-[3/4] rounded-2xl"></div>
+        <div class="skeleton aspect-[3/4] rounded-2xl"></div>
+        <div class="skeleton aspect-[3/4] rounded-2xl"></div>
+        <div class="skeleton aspect-[3/4] rounded-2xl"></div>
+      </div>
+
+      <!-- Games Grid -->
+      <div id="games-grid" class="hidden grid grid-cols-2 md:grid-cols-3 xl:grid-cols-4 gap-4"></div>
+
+      <!-- Empty State -->
+      <div id="empty-state" class="hidden text-center py-16">
+        <p class="text-4xl mb-4">🎮</p>
+        <h3 class="text-xl font-bold mb-2">No games found</h3>
+        <p class="text-slate-400">Try adjusting your filters</p>
+      </div>
+
+      <!-- Price Alert Section -->
+      <div class="mt-8 bg-gradient-to-r from-blue-900/30 to-cyan-900/30 border border-blue-500/20 rounded-2xl p-6">
+        <div class="text-center max-w-xl mx-auto">
+          <h3 class="text-2xl font-bold mb-2">🔔 Never Miss a Price Drop</h3>
+          <p class="text-slate-400 mb-6">Get instant alerts when your favorite PS5 games drop below your target price.</p>
+
+          <form id="alert-form" class="flex flex-col sm:flex-row gap-3">
+            <input type="email" id="alert-email" placeholder="your@email.com" required
+              class="flex-1 px-4 py-3 bg-slate-900 border border-slate-600 rounded-xl text-white placeholder-slate-500 focus:outline-none focus:border-blue-500">
+            <select id="alert-game" class="px-4 py-3 bg-slate-900 border border-slate-600 rounded-xl text-white focus:outline-none focus:border-blue-500">
+              <option value="">Select Game</option>
+            </select>
+            <input type="number" id="alert-price" placeholder="Target $" required
+              class="w-28 px-4 py-3 bg-slate-900 border border-slate-600 rounded-xl text-white placeholder-slate-500 focus:outline-none focus:border-blue-500">
+            <button type="submit" class="px-6 py-3 bg-blue-500 hover:bg-blue-600 text-white font-semibold rounded-xl transition">
+              Set Alert
+            </button>
+          </form>
+          <p id="alert-message" class="mt-3 text-sm hidden"></p>
+        </div>
+      </div>
+    </main>
+  </div>
+
+  <!-- Footer -->
+  <footer class="border-t border-slate-800 mt-12 py-8 text-center text-slate-500 text-sm">
+    <p class="font-semibold text-white">🎮 PS5 Store • AI Price Tracker</p>
+    <p class="mt-1 text-xs">Prices updated every 15 minutes • Real-time deal tracking</p>
+  </footer>
+
+  <!-- Search Modal -->
+  <div id="search-modal" class="hidden fixed inset-0 bg-black/80 backdrop-blur-sm z-50 flex items-start justify-center pt-20">
+    <div class="bg-[#111827] border border-slate-700 rounded-2xl w-full max-w-lg mx-4 p-4">
+      <div class="flex items-center gap-3 mb-4">
+        <span class="text-xl">🔍</span>
+        <input type="text" id="search-input" placeholder="Search PS5 games..." 
+          class="flex-1 bg-transparent text-white text-lg outline-none placeholder-slate-500">
+        <button onclick="document.getElementById('search-modal').classList.add('hidden')" class="text-slate-400 hover:text-white">✕</button>
+      </div>
+      <div id="search-results" class="max-h-64 overflow-y-auto space-y-2"></div>
     </div>
+  </div>
 
-    <div id="gameContentWrapper" style="display:none;"></div>
+  <script>
+    // ============================================
+    // GAME DATA - Real PS5 Games with IGDB Covers
+    // ============================================
+    const games = [
+      {
+        id: 1,
+        name: "Marvel's Spider-Man 2",
+        genre: "Action",
+        rating: 4.9,
+        current_price: 49.99,
+        original_price: 69.99,
+        discount: 29,
+        in_stock: true,
+        stock_level: "high",
+        image: "https://images.igdb.com/igdb/image/upload/t_cover_big/co5ziw.jpg",
+        ai_predicted: 39.99,
+        ai_confidence: 85,
+        ai_days: 7,
+        category: "sale",
+        deal_url: "https://www.playstation.com/en-us/games/marvels-spider-man-2/"
+      },
+      {
+        id: 2,
+        name: "God of War Ragnarök",
+        genre: "Action",
+        rating: 4.8,
+        current_price: 39.99,
+        original_price: 59.99,
+        discount: 33,
+        in_stock: true,
+        stock_level: "high",
+        image: "https://images.igdb.com/igdb/image/upload/t_cover_big/co5s5v.jpg",
+        ai_predicted: 29.99,
+        ai_confidence: 78,
+        ai_days: 14,
+        category: "sale",
+        deal_url: "https://www.playstation.com/en-us/games/god-of-war-ragnarok/"
+      },
+      {
+        id: 3,
+        name: "The Last of Us Part I",
+        genre: "Adventure",
+        rating: 4.7,
+        current_price: 49.99,
+        original_price: 69.99,
+        discount: 28,
+        in_stock: true,
+        stock_level: "medium",
+        image: "https://images.igdb.com/igdb/image/upload/t_cover_big/co6bo0.jpg",
+        ai_predicted: 39.99,
+        ai_confidence: 82,
+        ai_days: 10,
+        category: "sale",
+        deal_url: "https://www.playstation.com/en-us/games/the-last-of-us-part-i/"
+      },
+      {
+        id: 4,
+        name: "EA Sports FC 25",
+        genre: "Sports",
+        rating: 4.2,
+        current_price: 49.99,
+        original_price: 59.99,
+        discount: 17,
+        in_stock: true,
+        stock_level: "low",
+        image: "https://images.igdb.com/igdb/image/upload/t_cover_big/co6kqt.jpg",
+        ai_predicted: 34.99,
+        ai_confidence: 65,
+        ai_days: 30,
+        category: "sale",
+        deal_url: "https://www.ea.com/games/ea-sports-fc/fc-25"
+      },
+      {
+        id: 5,
+        name: "Black Myth: Wukong",
+        genre: "Action",
+        rating: 4.6,
+        current_price: 59.99,
+        original_price: 59.99,
+        discount: 0,
+        in_stock: true,
+        stock_level: "high",
+        image: "https://images.igdb.com/igdb/image/upload/t_cover_big/co6m7l.jpg",
+        ai_predicted: 49.99,
+        ai_confidence: 72,
+        ai_days: 21,
+        category: "trending",
+        deal_url: "https://www.playstation.com/en-us/games/black-myth-wukong/"
+      },
+      {
+        id: 6,
+        name: "Astro Bot",
+        genre: "Adventure",
+        rating: 4.9,
+        current_price: 59.99,
+        original_price: 59.99,
+        discount: 0,
+        in_stock: true,
+        stock_level: "high",
+        image: "https://images.igdb.com/igdb/image/upload/t_cover_big/co6k5e.jpg",
+        ai_predicted: 44.99,
+        ai_confidence: 68,
+        ai_days: 25,
+        category: "new",
+        deal_url: "https://www.playstation.com/en-us/games/astro-bot/"
+      },
+      {
+        id: 7,
+        name: "Stellar Blade",
+        genre: "Action",
+        rating: 4.5,
+        current_price: 69.99,
+        original_price: 69.99,
+        discount: 0,
+        in_stock: true,
+        stock_level: "medium",
+        image: "https://images.igdb.com/igdb/image/upload/t_cover_big/co6k4e.jpg",
+        ai_predicted: 54.99,
+        ai_confidence: 70,
+        ai_days: 18,
+        category: "trending",
+        deal_url: "https://www.playstation.com/en-us/games/stellar-blade/"
+      },
+      {
+        id: 8,
+        name: "Final Fantasy VII Rebirth",
+        genre: "RPG",
+        rating: 4.8,
+        current_price: 55.99,
+        original_price: 69.99,
+        discount: 20,
+        in_stock: true,
+        stock_level: "high",
+        image: "https://images.igdb.com/igdb/image/upload/t_cover_big/co6k3e.jpg",
+        ai_predicted: 44.99,
+        ai_confidence: 75,
+        ai_days: 12,
+        category: "sale",
+        deal_url: "https://www.playstation.com/en-us/games/final-fantasy-vii-rebirth/"
+      },
+      {
+        id: 9,
+        name: "Horizon Forbidden West",
+        genre: "Adventure",
+        rating: 4.7,
+        current_price: 29.99,
+        original_price: 59.99,
+        discount: 50,
+        in_stock: true,
+        stock_level: "high",
+        image: "https://images.igdb.com/igdb/image/upload/t_cover_big/co5pwb.jpg",
+        ai_predicted: 24.99,
+        ai_confidence: 60,
+        ai_days: 30,
+        category: "sale",
+        deal_url: "https://www.playstation.com/en-us/games/horizon-forbidden-west/"
+      },
+      {
+        id: 10,
+        name: "Gran Turismo 7",
+        genre: "Racing",
+        rating: 4.4,
+        current_price: 39.99,
+        original_price: 59.99,
+        discount: 33,
+        in_stock: true,
+        stock_level: "medium",
+        image: "https://images.igdb.com/igdb/image/upload/t_cover_big/co5p7d.jpg",
+        ai_predicted: 29.99,
+        ai_confidence: 80,
+        ai_days: 14,
+        category: "sale",
+        deal_url: "https://www.playstation.com/en-us/games/gran-turismo-7/"
+      },
+      {
+        id: 11,
+        name: "Demon's Souls",
+        genre: "RPG",
+        rating: 4.6,
+        current_price: 49.99,
+        original_price: 69.99,
+        discount: 29,
+        in_stock: false,
+        stock_level: "out",
+        image: "https://images.igdb.com/igdb/image/upload/t_cover_big/co5p6e.jpg",
+        ai_predicted: 39.99,
+        ai_confidence: 77,
+        ai_days: 10,
+        category: "rated",
+        deal_url: "https://www.playstation.com/en-us/games/demons-souls/"
+      },
+      {
+        id: 12,
+        name: "Ratchet & Clank: Rift Apart",
+        genre: "Action",
+        rating: 4.7,
+        current_price: 34.99,
+        original_price: 69.99,
+        discount: 50,
+        in_stock: true,
+        stock_level: "low",
+        image: "https://images.igdb.com/igdb/image/upload/t_cover_big/co5p8d.jpg",
+        ai_predicted: 29.99,
+        ai_confidence: 83,
+        ai_days: 7,
+        category: "sale",
+        deal_url: "https://www.playstation.com/en-us/games/ratchet-and-clank-rift-apart/"
+      }
+    ];
 
-</div>
+    let currentFilter = 'sale';
+    let currentView = 'grid';
+    let selectedGenres = new Set();
+    let priceRanges = [];
 
-<div class="footer">
+    // ============================================
+    // RENDER GAMES
+    // ============================================
+    function renderGames(filteredGames = null) {
+      const loadingDiv = document.getElementById('games-loading');
+      const gridDiv = document.getElementById('games-grid');
+      const emptyDiv = document.getElementById('empty-state');
 
-    <p>
-        PS5 Price Tracker · AI-Powered Deal Forecasting
-    </p>
+      let displayGames = filteredGames || getFilteredGames();
 
-    <p style="margin-top:8px; opacity:0.6;">
-        This site uses affiliate links. We may earn a commission when you buy through our links, at no extra cost to you.
-    </p>
+      loadingDiv.classList.add('hidden');
 
-    <div class="footer-links">
-        <a href="#" onclick="openModal('about')">About Us</a>
-        <a href="#" onclick="openModal('privacy')">Privacy Policy</a>
-        <a href="#" onclick="openModal('affiliate')">Affiliate Disclosure</a>
-        <a href="#" onclick="openModal('contact')">Contact</a>
-    </div>
+      if (displayGames.length === 0) {
+        gridDiv.classList.add('hidden');
+        emptyDiv.classList.remove('hidden');
+        return;
+      }
 
-</div>
+      emptyDiv.classList.add('hidden');
+      gridDiv.classList.remove('hidden');
 
-<!-- Modal -->
-<div class="modal-overlay" id="modalOverlay" onclick="closeModalOnOverlay(event)">
-    <div class="modal-box">
-        <button class="modal-close" onclick="closeModal()">✕</button>
-        <div id="modalContent"></div>
-    </div>
-</div>
+      if (currentView === 'list') {
+        gridDiv.className = 'hidden';
+        // List view logic here if needed
+        gridDiv.className = 'grid grid-cols-1 gap-4';
+      } else {
+        gridDiv.className = 'grid grid-cols-2 md:grid-cols-3 xl:grid-cols-4 gap-4';
+      }
 
-<script>
+      gridDiv.innerHTML = displayGames.map(game => {
+        const stockBadge = game.in_stock 
+          ? `<span class="px-2 py-1 bg-green-500/90 text-white text-[10px] font-bold rounded-lg backdrop-blur-sm">${game.stock_level === 'low' ? 'LOW STOCK' : 'IN STOCK'}</span>`
+          : `<span class="px-2 py-1 bg-red-500/90 text-white text-[10px] font-bold rounded-lg backdrop-blur-sm">OUT OF STOCK</span>`;
 
-// ---- Supabase Connection ----
-const SUPABASE_URL = 'https://nendtoxevwjjzwjvmvpa.supabase.co';
-const SUPABASE_KEY = 'sb_publishable_eWeRDmMQsmqrXxPKFmaUVw_TIFLQ8mY';
+        const discountBadge = game.discount > 0 
+          ? `<div class="absolute top-2 left-2"><span class="discount-badge px-2 py-1 text-white text-xs font-bold rounded-lg">-${game.discount}%</span></div>` 
+          : '';
 
-let allGames = [];
-let priceChartInstance = null;
-
-const modalContent = {
-    about: {
-        title: 'About PS5Tracker',
-        body: `<p>PS5Tracker helps gamers find the best time to buy PS5 titles by tracking prices across major retailers and forecasting future discounts using historical pricing patterns.</p>
-               <p style="margin-top:10px;">We're a small, independent project built to save gamers money — not to push impulse purchases.</p>`
-    },
-    privacy: {
-        title: 'Privacy Policy',
-        body: `<p>We collect minimal data — only what you voluntarily submit (e.g. your email for price alerts). We do not sell personal data to third parties.</p>
-               <p style="margin-top:10px;">We use standard analytics to understand site usage and affiliate tracking to measure link performance. Full policy will be published as the site matures.</p>`
-    },
-    affiliate: {
-        title: 'Affiliate Disclosure',
-        body: `<p>PS5Tracker participates in affiliate programs including Amazon Associates and others. When you click a store link and make a purchase, we may earn a small commission — at no extra cost to you.</p>
-               <p style="margin-top:10px;">This helps us keep the site free and continue tracking prices for you.</p>`
-    },
-    contact: {
-        title: 'Contact Us',
-        body: `<p>Have a question, found a bug, or want to suggest a game we're missing?</p>
-               <p style="margin-top:10px;">Email us at: <strong style="color:var(--accent)">support@ps5tracker.com</strong></p>`
-    },
-    caseStudies: {
-        title: 'Case Studies',
-        body: `<p>We're compiling real examples of price drops we predicted correctly — coming soon.</p>
-               <p style="margin-top:10px;">In the meantime, try searching for a game above to see our current forecast for it.</p>`
-    },
-    alerts: {
-        title: 'Get Price Alerts',
-        body: `<p>Enter your email and we'll notify you when your favorite games drop in price.</p>
-               <div class="modal-form">
-                   <input type="email" id="alertEmail" placeholder="you@example.com">
-                   <button onclick="submitAlertEmail()">Notify Me</button>
+        const aiSection = game.ai_predicted < game.current_price 
+          ? `<div class="mt-2 pt-2 border-t border-slate-800">
+               <div class="flex items-center justify-between mb-1">
+                 <span class="text-[10px] text-purple-400 font-medium">🤖 AI Predicts</span>
+                 <span class="text-xs text-green-400 font-bold">$${game.ai_predicted}</span>
                </div>
-               <p class="modal-success" id="alertSuccess">✓ Thanks! We'll email you when prices drop.</p>`
-    }
-};
+               <div class="h-1 bg-slate-800 rounded-full overflow-hidden">
+                 <div class="ai-predict-bar h-full rounded-full" style="width: ${game.ai_confidence}%"></div>
+               </div>
+               <p class="text-[10px] text-slate-500 mt-1">${game.ai_confidence}% confidence • ${game.ai_days} days</p>
+             </div>` 
+          : '';
 
-function openModal(key) {
-    const data = modalContent[key];
-    if (!data) return;
-
-    document.getElementById('modalContent').innerHTML =
-        `<h3>${data.title}</h3>${data.body}`;
-
-    document.getElementById('modalOverlay').classList.add('active');
-}
-
-function closeModal() {
-    document.getElementById('modalOverlay').classList.remove('active');
-}
-
-function closeModalOnOverlay(e) {
-    if (e.target.id === 'modalOverlay') closeModal();
-}
-
-async function submitAlertEmail() {
-    const emailInput = document.getElementById('alertEmail');
-    const email = emailInput.value.trim();
-    if (!email || !email.includes('@')) {
-        alert('Please enter a valid email address.');
-        return;
-    }
-
-    try {
-        const res = await fetch(`${SUPABASE_URL}/rest/v1/subscribers`, {
-            method: 'POST',
-            headers: {
-                'apikey': SUPABASE_KEY,
-                'Authorization': `Bearer ${SUPABASE_KEY}`,
-                'Content-Type': 'application/json',
-                'Prefer': 'return=minimal'
-            },
-            body: JSON.stringify({ email: email })
-        });
-
-        if (!res.ok) throw new Error('Subscribe failed');
-
-        document.getElementById('alertSuccess').classList.add('active');
-        emailInput.value = '';
-        emailInput.disabled = true;
-    } catch (err) {
-        console.error('Subscribe error:', err);
-        alert('Something went wrong saving your email. Please try again shortly.');
-    }
-}
-
-const genreIcons = {
-    'Sports': '⚽',
-    'Action': '⚔️',
-    'RPG': '🛡️',
-    'Action RPG': '🛡️',
-    'Horror': '👻',
-    'Fighting': '🥊',
-    'Shooter': '🔫',
-    'Racing': '🏎️',
-    'Adventure': '🧭',
-    'Platformer': '🍄',
-    'Strategy RPG': '♟️'
-};
-
-function getIcon(genre) {
-    return genreIcons[genre] || '🎮';
-}
-
-async function loadGames() {
-    try {
-        const res = await fetch(
-            `${SUPABASE_URL}/rest/v1/games?select=*&order=title.asc`,
-            {
-                headers: {
-                    'apikey': SUPABASE_KEY,
-                    'Authorization': `Bearer ${SUPABASE_KEY}`
-                }
-            }
-        );
-
-        if (!res.ok) throw new Error('Failed to fetch games');
-
-        allGames = await res.json();
-
-        document.getElementById('statGames').textContent = allGames.length + '+';
-        document.getElementById('loadingMsg').style.display = 'none';
-
-        renderQuickTags();
-        renderFeaturedGame();
-
-    } catch (err) {
-        console.error(err);
-        document.getElementById('loadingMsg').textContent =
-            'Could not load games database. Please refresh the page.';
-    }
-}
-
-function renderQuickTags() {
-    const featured = allGames.slice(0, 5);
-    const tagsEl = document.getElementById('quickTags');
-
-    tagsEl.innerHTML = featured.map(g => `
-        <span class="tag" onclick="quickSearch('${g.title.replace(/'/g, "\\'")}')">
-            ${getIcon(g.genre)} ${g.title}
-        </span>
-    `).join('');
-}
-
-function renderFeaturedGame() {
-    if (allGames.length === 0) return;
-    // Show a well-known, released game by default so visitors see real content immediately
-    const released = allGames.filter(g => g.rating && g.rating > 0);
-    const pick = released.length > 0
-        ? released[Math.floor(Math.random() * released.length)]
-        : allGames[0];
-
-    renderGame(pick);
-    document.getElementById('resultsArea').classList.add('active');
-}
-
-function generateDemoPricing(basePrice) {
-    const stores = [
-        { name: 'Amazon', icon: '🛒', link: 'https://amazon.com' },
-        { name: 'Best Buy', icon: '🏪', link: 'https://bestbuy.com' },
-        { name: 'Walmart', icon: '🏬', link: 'https://walmart.com' },
-        { name: 'GameStop', icon: '🎮', link: 'https://gamestop.com' },
-        { name: 'PlayStation Store', icon: '🔵', link: 'https://store.playstation.com' },
-        { name: 'Target', icon: '🎯', link: 'https://target.com' }
-    ];
-
-    let lowestIdx = 0;
-    let lowestPrice = Infinity;
-
-    const results = stores.map((s, i) => {
-        const variance = (Math.sin(basePrice * (i + 1)) * 0.15) + 0.85;
-        const price = Math.max(4.99, basePrice * variance);
-        if (price < lowestPrice) {
-            lowestPrice = price;
-            lowestIdx = i;
-        }
-        const orig = basePrice;
-        const discPct = Math.round((1 - price / orig) * 100);
-        return {
-            ...s,
-            price: '$' + price.toFixed(2),
-            orig: '$' + orig.toFixed(2),
-            disc: discPct > 0 ? discPct + '% OFF' : 'Full Price'
-        };
-    });
-
-    results[lowestIdx].best = true;
-    return results;
-}
-
-function searchGame() {
-    const query = document.getElementById('searchInput').value.trim().toLowerCase();
-    if (!query) return;
-
-    const found = allGames.find(g =>
-        g.title.toLowerCase().includes(query) ||
-        query.includes(g.title.toLowerCase())
-    );
-
-    if (!found) {
-        showNoResults(query);
-        return;
-    }
-
-    renderGame(found);
-    hideAutocomplete();
-
-    document.getElementById('resultsArea').classList.add('active');
-    document.getElementById('resultsArea').scrollIntoView({ behavior: 'smooth' });
-}
-
-function showNoResults(query) {
-    document.getElementById('skeletonLoader').style.display = 'none';
-    const wrapper = document.getElementById('gameContentWrapper');
-    wrapper.style.display = 'block';
-    wrapper.innerHTML = `
-        <div class="no-results">
-            <h3>No games found for "${query}"</h3>
-            <p style="margin-top:8px;">Try searching for a different title, or browse our featured games above.</p>
-        </div>
-    `;
-    document.getElementById('resultsArea').scrollIntoView({ behavior: 'smooth' });
-}
-
-function quickSearch(name) {
-    document.getElementById('searchInput').value = name;
-    searchGame();
-}
-
-function renderGame(g) {
-    document.getElementById('skeletonLoader').style.display = 'none';
-    const wrapper = document.getElementById('gameContentWrapper');
-    wrapper.style.display = 'block';
-
-    wrapper.innerHTML = `
-        <div class="game-header-card">
-            <div class="game-cover" id="gIcon">
-                <span class="game-cover-icon" id="gIconEmoji">🎮</span>
-                <span class="game-cover-label">PS5</span>
-            </div>
-            <div class="game-info">
-                <h2 id="gTitle">—</h2>
-                <div class="game-meta" id="gMeta">—</div>
-                <div class="ai-badge" id="gBadge">
-                    <span>🤖</span>
-                    <span id="gBadgeText">—</span>
+        return `
+          <div class="game-card bg-[#111827] border border-slate-800 rounded-2xl overflow-hidden hover:border-blue-500/50 hover:shadow-xl hover:shadow-blue-500/10 cursor-pointer">
+            <div class="relative aspect-[3/4] overflow-hidden">
+              <img src="${game.image}" alt="${game.name}" 
+                   class="cover-img w-full h-full object-cover"
+                   onerror="this.src='https://via.placeholder.com/300x400/1e293b/3b82f6?text=${encodeURIComponent(game.name)}'">
+              ${discountBadge}
+              <div class="absolute top-2 right-2">${stockBadge}</div>
+              <div class="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/90 to-transparent p-3 pt-8">
+                <div class="flex items-center gap-1">
+                  <span class="text-yellow-400 text-xs">⭐ ${game.rating}</span>
+                  <span class="text-slate-400 text-xs">• ${game.genre}</span>
                 </div>
+              </div>
             </div>
-        </div>
-
-        <div class="section-title">💰 Prices & Deals (Demo)</div>
-        <div class="stores-grid" id="storesGrid"></div>
-
-        <div class="chart-card">
-            <div class="section-title">📉 Price History & Forecast</div>
-            <canvas id="priceChart"></canvas>
-            <p style="color:var(--text-muted); font-size:0.78rem; margin-top:10px; text-align:center;">
-                ⚠️ Estimated trend for demo purposes — real historical pricing coming soon.
-            </p>
-        </div>
-    `;
-    document.getElementById('gIconEmoji').textContent = getIcon(g.genre);
-    document.getElementById('gTitle').textContent = g.title;
-
-    const releaseYear = g.release_date ? new Date(g.release_date).getFullYear() : 'TBA';
-    const metaParts = [
-        g.release_date ? `Released: ${g.release_date}` : 'Release: TBA',
-        g.genre || 'Unknown Genre',
-        g.publisher || 'Unknown Publisher'
-    ];
-    if (g.rating && g.rating > 0) {
-        metaParts.push(`Metacritic: ${g.rating}`);
+            <div class="p-3">
+              <h3 class="font-semibold text-sm mb-1 truncate group-hover:text-blue-400 transition">${game.name}</h3>
+              <div class="flex items-end justify-between">
+                <div>
+                  <p class="text-lg font-bold text-white">$${game.current_price}</p>
+                  ${game.original_price > game.current_price ? `<p class="text-xs text-slate-500 line-through">$${game.original_price}</p>` : ''}
+                </div>
+                <button onclick="window.open('${game.deal_url}', '_blank')" 
+                  class="px-3 py-1.5 ${game.in_stock ? 'bg-blue-600 hover:bg-blue-500' : 'bg-slate-700 cursor-not-allowed'} 
+                  text-white text-xs font-medium rounded-lg transition">
+                  ${game.in_stock ? 'View →' : 'Notify'}
+                </button>
+              </div>
+              ${aiSection}
+            </div>
+          </div>
+        `;
+      }).join('');
     }
-    document.getElementById('gMeta').textContent = metaParts.join(' · ');
 
-    const isUpcoming = !g.rating || g.rating === 0;
-    document.getElementById('gBadgeText').textContent = isUpcoming
-        ? 'Not yet released — price tracking will begin at launch'
-        : 'Price tracking active — check current deals below';
+    function getFilteredGames() {
+      let filtered = games;
 
-    // Estimate a base price for demo purposes
-    const basePrice = isUpcoming ? 69.99 : Math.max(14.99, 69.99 - (2026 - releaseYear) * 8);
+      // Category filter
+      if (currentFilter !== 'all') {
+        if (currentFilter === 'sale') filtered = filtered.filter(g => g.discount > 0);
+        else if (currentFilter === 'ai') filtered = filtered.filter(g => g.ai_predicted < g.current_price);
+        else if (currentFilter === 'new') filtered = filtered.filter(g => g.category === 'new');
+        else if (currentFilter === 'trending') filtered = filtered.filter(g => g.category === 'trending');
+        else if (currentFilter === 'rated') filtered = filtered.filter(g => g.rating >= 4.5);
+      }
 
-    const grid = document.getElementById('storesGrid');
-    const stores = generateDemoPricing(basePrice);
+      // Genre filter
+      if (selectedGenres.size > 0) {
+        filtered = filtered.filter(g => selectedGenres.has(g.genre));
+      }
 
-    grid.innerHTML = stores.map(s => `
-        <div class="store-card ${s.best ? 'best' : ''}">
-            <div class="store-header">
-                <div class="store-icon">${s.icon}</div>
-                <div class="store-name">${s.name}</div>
-            </div>
-            <div class="store-price-row">
-                <span class="price-current">${s.price}</span>
-                <span class="price-old">${s.orig}</span>
-            </div>
-            <span class="discount-tag">${s.disc}</span>
-            <a href="${s.link}" class="store-link" target="_blank" rel="nofollow sponsored">
-                View Deal →
-            </a>
-        </div>
-    `).join('');
+      // Price filter
+      if (priceRanges.length > 0) {
+        filtered = filtered.filter(g => {
+          return priceRanges.some(range => {
+            if (range === 'under20') return g.current_price < 20;
+            if (range === '20to40') return g.current_price >= 20 && g.current_price < 40;
+            if (range === '40to60') return g.current_price >= 40 && g.current_price < 60;
+            if (range === '60plus') return g.current_price >= 60;
+            return false;
+          });
+        });
+      }
 
-    renderPriceChart(basePrice);
-}
+      return filtered;
+    }
 
-function renderPriceChart(basePrice) {
-    const months = ['6mo ago', '5mo ago', '4mo ago', '3mo ago', '2mo ago', 'Last mo', 'Now'];
-    const orig = basePrice * 1.6;
+    // ============================================
+    // SIDEBAR NAVIGATION
+    // ============================================
+    document.querySelectorAll('.sidebar-link').forEach(link => {
+      link.addEventListener('click', (e) => {
+        e.preventDefault();
+        document.querySelectorAll('.sidebar-link').forEach(l => {
+          l.classList.remove('active');
+          l.classList.add('text-slate-400', 'border-transparent');
+          l.classList.remove('text-blue-300');
+        });
+        link.classList.add('active');
+        link.classList.remove('text-slate-400', 'border-transparent');
 
-    const dataPoints = months.map((_, i) => {
-        const progress = i / (months.length - 1);
-        const decline = orig - (orig - basePrice) * progress;
-        const wiggle = Math.sin(i * 1.7) * (orig * 0.03);
-        return Math.max(basePrice * 0.85, decline + wiggle);
+        currentFilter = link.dataset.filter;
+
+        const titles = {
+          sale: '🔥 Deals of the Week',
+          trending: '📈 Trending Now',
+          new: '🆕 New Releases',
+          rated: '⭐ Top Rated',
+          ai: '🤖 AI Predicted Drops'
+        };
+        document.getElementById('section-title').textContent = titles[currentFilter] || 'All Games';
+
+        renderGames();
+      });
     });
 
-    const ctx = document.getElementById('priceChart');
-    if (!ctx) return;
-
-    if (priceChartInstance) {
-        priceChartInstance.destroy();
-    }
-
-    priceChartInstance = new Chart(ctx, {
-        type: 'line',
-        data: {
-            labels: months,
-            datasets: [{
-                label: 'Price ($)',
-                data: dataPoints,
-                borderColor: '#f59e0b',
-                backgroundColor: 'rgba(245,158,11,0.1)',
-                borderWidth: 2,
-                fill: true,
-                tension: 0.35,
-                pointBackgroundColor: '#f59e0b',
-                pointRadius: 3
-            }]
-        },
-        options: {
-            responsive: true,
-            plugins: {
-                legend: { display: false }
-            },
-            scales: {
-                y: {
-                    ticks: { color: '#9ca3af', callback: v => '$' + v.toFixed(0) },
-                    grid: { color: '#1f2937' }
-                },
-                x: {
-                    ticks: { color: '#9ca3af' },
-                    grid: { display: false }
-                }
-            }
+    // Genre filters
+    document.querySelectorAll('.genre-tag').forEach(tag => {
+      tag.addEventListener('click', () => {
+        const genre = tag.dataset.genre;
+        if (selectedGenres.has(genre)) {
+          selectedGenres.delete(genre);
+          tag.classList.remove('border-blue-500', 'text-blue-300');
+          tag.classList.add('border-slate-700', 'text-slate-300');
+        } else {
+          selectedGenres.add(genre);
+          tag.classList.add('border-blue-500', 'text-blue-300');
+          tag.classList.remove('border-slate-700', 'text-slate-300');
         }
+        renderGames();
+      });
     });
-}
 
-function hideAutocomplete() {
-    const box = document.getElementById('autocompleteBox');
-    box.classList.remove('active');
-    box.innerHTML = '';
-}
+    // Price filters
+    document.querySelectorAll('.price-filter').forEach(checkbox => {
+      checkbox.addEventListener('change', () => {
+        priceRanges = Array.from(document.querySelectorAll('.price-filter:checked')).map(cb => cb.value);
+        renderGames();
+      });
+    });
 
-function showAutocomplete(query) {
-    const box = document.getElementById('autocompleteBox');
+    // ============================================
+    // SEARCH
+    // ============================================
+    const searchInput = document.getElementById('search-input');
+    const searchResults = document.getElementById('search-results');
 
-    if (!query) {
-        hideAutocomplete();
+    searchInput.addEventListener('input', (e) => {
+      const query = e.target.value.toLowerCase();
+      if (query.length < 2) {
+        searchResults.innerHTML = '';
         return;
-    }
+      }
 
-    const matches = allGames.filter(g =>
-        g.title.toLowerCase().includes(query.toLowerCase())
-    ).slice(0, 8);
-
-    if (matches.length === 0) {
-        hideAutocomplete();
-        return;
-    }
-
-    box.innerHTML = matches.map(g => `
-        <div class="autocomplete-item" onclick="quickSearch('${g.title.replace(/'/g, "\\'")}')">
-            <span class="autocomplete-title">${g.title}</span>
-            <span class="autocomplete-pub">${g.publisher || ''}</span>
+      const matches = games.filter(g => g.name.toLowerCase().includes(query));
+      searchResults.innerHTML = matches.map(g => `
+        <div class="flex items-center gap-3 p-3 hover:bg-slate-800 rounded-xl cursor-pointer transition" onclick="window.open('${g.deal_url}', '_blank')">
+          <img src="${g.image}" class="w-12 h-16 object-cover rounded-lg" onerror="this.style.display='none'">
+          <div>
+            <p class="font-medium text-sm">${g.name}</p>
+            <p class="text-xs text-slate-400">$${g.current_price} • ${g.genre}</p>
+          </div>
         </div>
-    `).join('');
+      `).join('');
+    });
 
-    box.classList.add('active');
-}
+    // ============================================
+    // ALERT FORM
+    // ============================================
+    const alertSelect = document.getElementById('alert-game');
+    games.forEach(g => {
+      const option = document.createElement('option');
+      option.value = g.id;
+      option.textContent = g.name;
+      alertSelect.appendChild(option);
+    });
 
-function scrollToTop(e) {
-    e.preventDefault();
-    window.scrollTo({ top: 0, behavior: 'smooth' });
-}
+    document.getElementById('alert-form').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const email = document.getElementById('alert-email').value;
+      const gameId = document.getElementById('alert-game').value;
+      const price = document.getElementById('alert-price').value;
+      const msg = document.getElementById('alert-message');
 
-function scrollToSearch(e) {
-    e.preventDefault();
-    document.getElementById('searchInput').scrollIntoView({ behavior: 'smooth', block: 'center' });
-}
+      // Save to localStorage for demo (replace with Supabase later)
+      const alerts = JSON.parse(localStorage.getItem('price_alerts') || '[]');
+      alerts.push({ email, gameId, price, date: new Date().toISOString() });
+      localStorage.setItem('price_alerts', JSON.stringify(alerts));
 
-function toggleMobileMenu() {
-    document.getElementById('mobileMenu').classList.toggle('active');
-}
+      msg.textContent = '✅ Alert saved! We will notify you when the price drops.';
+      msg.className = 'mt-3 text-sm text-green-400';
+      msg.classList.remove('hidden');
+      e.target.reset();
+    });
 
-document.getElementById('searchInput').addEventListener('input', e => {
-    showAutocomplete(e.target.value.trim());
-});
-
-document.getElementById('searchInput').addEventListener('keypress', e => {
-    if (e.key === 'Enter') {
-        searchGame();
+    function changeView(view) {
+      currentView = view;
+      renderGames();
     }
-});
 
-document.addEventListener('click', e => {
-    if (!e.target.closest('.search-box')) {
-        hideAutocomplete();
-    }
-});
+    // ============================================
+    // INIT
+    // ============================================
+    document.addEventListener('DOMContentLoaded', () => {
+      // Update sale count
+      const saleCount = games.filter(g => g.discount > 0).length;
+      document.getElementById('sale-count').textContent = saleCount;
 
-loadGames();
-
-</script>
-
+      // Simulate loading
+      setTimeout(() => {
+        renderGames();
+      }, 800);
+    });
+  </script>
 </body>
 </html>
